@@ -1,19 +1,22 @@
 ﻿; # AHK-MIDI-Transformer
+; タスクバーのメニューからインプットデバイス(MIDIキーボードなど)とアウトプットデバイス(loopMIDI仮想デバイスなど)を選択します。
+; タスクバーのSettingメニューから動作の設定ができます。
 ; ## Fixed Velocity
-; ベロシティの値を固定させる
-; Global fixedVelocity で変更する。0-127。0のときはオフになる
-; CCで変更したい場合
+; ベロシティの値を固定させます
+; 0-127の間で変更できます。0のときはオフになります。設定ウィンドウの他CCでも変更できます。
+; CCで変更したい場合一度起動して終了させ、同じ階層に作られたiniファイルの
 ; ```
-; MidiControlChange21:
-;     setFixedVelocityFromCC()
-; Return
+; fixedVelocityCC=21
 ; ```
-; などと書いて呼び出すと現在の値を見ながら変更できる
-;
+; の部分をお望みの数字に書き換えてください。デフォルトでは相対値(65で+、63で-)で変わります。絶対値で変更したい場合は
+; ```
+; CCMode=1
+; ```
+; の設定を0にしてください。
 ; ## Auto Scale
-; 白鍵のみでスケールを演奏できる
-; Cがルート音になる。例えばキーをFにするとCでFが鳴る
-; C Majorにしておくと通常通りの動作
+; 白鍵のみでスケールを演奏できるようになります。設定ウィンドウでキーやスケールを変更できます。
+; 強制的にCがルート音にります。例えばキーをFにするとCでFが鳴ります。
+; C Majorにしておくと何も変更されない通常通りの動作となります。起動し直すとC Majorに戻ります。
 
 
 #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
