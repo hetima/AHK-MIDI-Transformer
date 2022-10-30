@@ -91,6 +91,12 @@ SendAllNoteOff(ch = 1)
 ; CC
 MidiControlChange:
     event := midi.MidiIn()
+    altLabel := "AMTMidiControlChange" . event.controller
+    If IsLabel( altLabel )
+    {
+        Gosub %altLabel%
+        Return
+    }
     cc := event.controller
     If (cc == fixedVelocityCC)
     {
