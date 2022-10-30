@@ -57,9 +57,9 @@ Global autoScaleOff := False
 Global midi := new Midi()
 OnExit, ExitSub
 midi.LoadIOSetting(settingFilePath)
-loadSetting()
-initSettingGui()
-initSettingCCFV()
+LoadSetting()
+InitSettingGui()
+InitSettingCCFV()
 Menu, Tray, Add
 Menu, Tray, Add, Setting
 midiEventPassThrough := True
@@ -102,7 +102,7 @@ MidiControlChange:
     cc := event.controller
     If (cc == fixedVelocityCC)
     {
-        setFixedVelocityFromCC()
+        SetFixedVelocityFromCC()
     }else{
         midi.MidiOutRawData(event.rawBytes)
     }
@@ -116,7 +116,7 @@ Return
 
 
 Return
-transformMidiNote(noteEvent)
+TransformMidiNote(noteEvent)
 {
     noteNumber := noteEvent.noteNumber
     noteNumber := octaveShift * MIDI_NOTE_SIZE + noteNumber
@@ -167,15 +167,15 @@ MidiNoteOn:
     }else{
         newVel = event.velocity
     }
-    newNum := transformMidiNote(event)
+    newNum := TransformMidiNote(event)
     Midi.MidiOut("N1", 1, newNum, newVel)
     ;設定ウィンドウがアクティブなら情報表示
     IfWinActive ahk_pid %__pid%
     {
         midiEvent.note := MIDI_NOTES[ noteScaleNumber + 1 ]
 
-    ; Determine the octave of the note in the scale 
-    noteOctaveNumber := Floor( midiEvent.noteNumber / MIDI_NOTE_SIZE )
+        ; Determine the octave of the note in the scale 
+        noteOctaveNumber := Floor( midiEvent.noteNumber / MIDI_NOTE_SIZE )
         ; Create a friendly name for the note and octave, ie: "C4"
         newNoteName := MIDI_NOTES[ Mod( newNum, MIDI_NOTE_SIZE ) + 1 ] . MIDI_OCTAVES[ Floor( newNum / MIDI_NOTE_SIZE ) + 1 ]
         log := event.noteNumber . " (" . event.noteName . ") vel:" . event.velocity . " -> " . newNum . " (" . newNoteName . ") vel:" . newVel
@@ -190,14 +190,14 @@ MidiNoteOff:
     {
         Gosub %altLabel%
         Return
-    }    noteNumber := transformMidiNote(event)
+    }    noteNumber := TransformMidiNote(event)
     Midi.MidiOut("N0", 1, noteNumber, event.velocity)
 Return
 
 ;;;;;;;;;; setting ;;;;;;;;;;
 
-; fixedVelocityを変更するCCが来たら設定ウィンドウを表示
-setFixedVelocityFromCC()
+; fixedVelocityを変更するCCが来たらパネルを表示
+SetFixedVelocityFromCC()
 {
     If (CCMode==0){
         fixedVelocity := midi.MidiIn().value
@@ -224,7 +224,7 @@ SetAutoScale(key, scale, showPanel = False)
 {
     autoScaleKey := key
     autoScale := scale
-    updateSettingWindow()
+    UpdateSettingWindow()
     If (showPanel){
         str := MIDI_NOTES[key] . " " . MIDI_SCALES_S[scale]
         GuiControl, 9:Text, CCTxt, %str%
@@ -240,7 +240,7 @@ global SFVTxt
 global SScaleKey
 global SScale
 global SLogTxt
-initSettingGui(){
+InitSettingGui(){
     Gui 7: -MinimizeBox -MaximizeBox
     Gui 7: Font, s12, Segoe UI
     Gui 7: Add, Text, x8 y16 w120 h30 +0x200 Right, Fixed Velocity:
@@ -266,13 +266,13 @@ Setting:
 Return
 
 ; 設定ウィンドウを表示
-showSetting()
+ShowSetting()
 {
     updateSettingWindow()
     Gui 7: Show, w440 h140, AHK-MIDI-Transformer Setting
     Return
 }
-updateSettingWindow()
+UpdateSettingWindow()
 {
     GuiControl , 7:, SFVSlidr, %fixedVelocity%
     GuiControl , 7:Text, SFVTxt, %fixedVelocity%
@@ -302,7 +302,7 @@ Return
 ; fixedVelocity 変更中のウィンドウ
 global CCTxt
 
-initSettingCCFV()
+InitSettingCCFV()
 {
     Gui 9:-MinimizeBox -MaximizeBox
     Gui 9:Font, s60
@@ -315,7 +315,7 @@ initSettingCCFV()
     Gui ,9: Cancel
 Return
 
-showSettingCCFV()
+ShowSettingCCFV()
 {
     Gui 9: Show, w348 h98, Window
 }
@@ -329,7 +329,7 @@ Return
 
 
 ; 設定読み込み/保存
-loadSettingValue(name, defaultVal)
+LoadSettingValue(name, defaultVal)
 {
     IniRead, result, %settingFilePath%, mySettings, %name%
     If (result <> "ERROR"){
@@ -338,30 +338,30 @@ loadSettingValue(name, defaultVal)
     return defaultVal
 }
 
-loadSetting()
+LoadSetting()
 {
-    fixedVelocity := loadSettingValue("fixedVelocity", fixedVelocity)
-    fixedVelocityCC := loadSettingValue("fixedVelocityCC", fixedVelocityCC)
-    fixedVelocityCCStep :=loadSettingValue("fixedVelocityCCStep", fixedVelocityCCStep)
-    CCMode :=loadSettingValue("CCMode", CCMode)
+    fixedVelocity := LoadSettingValue("fixedVelocity", fixedVelocity)
+    fixedVelocityCC := LoadSettingValue("fixedVelocityCC", fixedVelocityCC)
+    fixedVelocityCCStep :=LoadSettingValue("fixedVelocityCCStep", fixedVelocityCCStep)
+    CCMode :=LoadSettingValue("CCMode", CCMode)
 
 }
 
-saveSettingValue(name, val)
+SaveSettingValue(name, val)
 {
     IniWrite, %val%, %settingFilePath%, mySettings, %name%
 }
 
-saveSetting()
+SaveSetting()
 {
-    saveSettingValue("fixedVelocity", fixedVelocity)
-    saveSettingValue("fixedVelocityCC", fixedVelocityCC)
-    saveSettingValue("fixedVelocityCCStep", fixedVelocityCCStep)
-    saveSettingValue("CCMode", CCMode)
+    SaveSettingValue("fixedVelocity", fixedVelocity)
+    SaveSettingValue("fixedVelocityCC", fixedVelocityCC)
+    SaveSettingValue("fixedVelocityCCStep", fixedVelocityCCStep)
+    SaveSettingValue("CCMode", CCMode)
     ; IniWrite, %fixedVelocity%, %settingFilePath%, mySettings, fixedVelocity
 }
 
 ExitSub:
-    saveSetting()
+    SaveSetting()
     midi.SaveIOSetting(settingFilePath)
 ExitApp
