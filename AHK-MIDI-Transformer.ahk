@@ -64,7 +64,9 @@ Menu, Tray, Add
 Menu, Tray, Add, Setting
 midiEventPassThrough := True
 
-;Global MIDI_NOTES     := [ "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" ]
+Global MIDI_NOTES     := [ "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" ]
+Global MIDI_SCALES    := ["Major", "Minor", "H-Minor", "M-Minor"]
+Global MIDI_SCALES_S  := ["", "min", "Hmin", "Mmin"]
 Global MINOR_SHIFT     := [ 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, -1 ]
 Global H_MINOR_SHIFT   := [ 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0 ]
 Global M_MINOR_SHIFT   := [ 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0 ]
@@ -213,9 +215,22 @@ setFixedVelocityFromCC()
     }
 
     GuiControl, 9:Text, CCTxt, %fixedVelocity%
-    Gui 9:Show, w340 h100, Fixed Velocity
+    Gui 9:Show, w360 h100, Fixed Velocity
     SetTimer, HideSettingCCFV, 1000
     updateSettingWindow()
+}
+
+SetAutoScale(key, scale, showPanel = False)
+{
+    autoScaleKey := key
+    autoScale := scale
+    updateSettingWindow()
+    If (showPanel){
+        str := MIDI_NOTES[key] . " " . MIDI_SCALES_S[scale]
+        GuiControl, 9:Text, CCTxt, %str%
+        Gui 9:Show, w360 h100, Auto Scale
+        SetTimer, HideSettingCCFV, 1000
+    }
 }
 
 ; 設定ウィンドウ
@@ -291,7 +306,7 @@ initSettingCCFV()
 {
     Gui 9:-MinimizeBox -MaximizeBox
     Gui 9:Font, s60
-    Gui 9:Add, Text, vCCTxt x24 y16 w296 h62 +0x200 Center, %fixedVelocity%
+    Gui 9:Add, Text, vCCTxt x0 y16 w360 h62 +0x200 Center, %fixedVelocity%
     Gui 9:Font
 }
 
