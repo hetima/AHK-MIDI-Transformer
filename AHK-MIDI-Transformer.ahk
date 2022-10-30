@@ -1,0 +1,350 @@
+﻿; # AHK-MIDI-Transformer
+; ## Fixed Velocity
+; ベロシティの値を固定させる
+; Global fixedVelocity で変更する。0-127。0のときはオフになる
+; CCで変更したい場合
+; ```
+; MidiControlChange21:
+;     setFixedVelocityFromCC()
+; Return
+; ```
+; などと書いて呼び出すと現在の値を見ながら変更できる
+;
+; ## Auto Scale
+; 白鍵のみでスケールを演奏できる
+; Cがルート音になる。例えばキーをFにするとCでFが鳴る
+; C Majorにしておくと通常通りの動作
+
+
+#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+; #Warn  ; Enable warnings to assist with detecting common errors.
+SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
+
+; 設定ファイルのパス
+Global settingFilePath
+if(!settingFilePath){
+    settingFilePath := A_ScriptDir . "\AHK-MIDI-Transformer.ini"
+}
+; 以下の設定はiniファイルに保存されるのでここを編集しても反映されません
+; iniファイルがないときの初期値です
+; GUIで変更できない現在値を変えたい場合はahkを終了させてからiniを編集してください
+
+; ベロシティ固定値 0-127 0==off
+Global fixedVelocity := 0
+; ベロシティ固定値を変更するCC
+Global fixedVelocityCC := 21
+; CCで変更するとき100以下の増減値（CCMode := 1のときのみ有効）
+Global fixedVelocityCCStep := 5
+; CC設定 0==絶対値 1==相対(65で+、63で-) 
+Global CCMode := 1
+
+;iniに書き込まれる設定おわり
+
+
+
+
+
+; Global octaveShiftKey := []
+; Global octaveShiftRange := []
+
+
+; オートスケール
+Global autoScaleKey := 1 ;1==C ~ 12==B
+Global autoScale := 1 ;1==Major 2==Minor 3==H-Minor 4==M-Minor
+Global octaveShift := 0
+; 一時的にオフにするとき用
+Global autoScaleOff := False
+
+
+
+#include ../repos/AutoHotkey-Midi/Midi.ahk
+Global midi := new Midi()
+OnExit, ExitSub
+midi.LoadIOSetting(settingFilePath)
+loadSetting()
+initSettingGui()
+initSettingCCFV()
+Menu, Tray, Add
+Menu, Tray, Add, Setting
+midiEventPassThrough := True
+
+;Global MIDI_NOTES     := [ "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" ]
+Global MINOR_SHIFT     := [ 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, -1 ]
+Global H_MINOR_SHIFT   := [ 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0 ]
+Global M_MINOR_SHIFT   := [ 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0 ]
+
+Process, Exist,
+global __pid := ErrorLevel
+; 必須初期化おわり
+
+
+
+; 初期化おわり
+Return
+
+
+; オールノートオフを送信する
+SendAllNoteOff(ch = 1)
+{
+    dwMidi := (176+ch) + (123 << 8) + (0 << 16)
+    midi.MidiOutRawData(dwMidi)
+}
+
+;;;;;;;;;; transform ;;;;;;;;;;
+
+; CC
+MidiControlChange:
+    event := midi.MidiIn()
+    cc := event.controller
+    If (cc == fixedVelocityCC)
+    {
+        setFixedVelocityFromCC()
+    }else{
+        midi.MidiOutRawData(event.rawBytes)
+    }
+    ;設定ウィンドウがアクティブなら情報表示
+    IfWinActive ahk_pid %__pid%
+    {
+        log := "CC:" event.controller . " (" . event.value . ")"
+        GuiControl, 7:Text, SLogTxt, %log%
+    }
+Return
+
+
+Return
+transformMidiNote(noteEvent)
+{
+    noteNumber := noteEvent.noteNumber
+    noteNumber := octaveShift * MIDI_NOTE_SIZE + noteNumber
+    If (!autoScaleOff)
+    {
+        If (autoScale == 2)
+        {
+            noteScaleNumber := Mod( noteNumber, MIDI_NOTE_SIZE )
+            noteNumber := noteNumber + MINOR_SHIFT[noteScaleNumber + 1]
+        }
+        else If (autoScale == 3)
+        {
+            noteScaleNumber := Mod( noteNumber, MIDI_NOTE_SIZE )
+            noteNumber := noteNumber + H_MINOR_SHIFT[noteScaleNumber + 1]
+        }
+        else If (autoScale == 4)
+        {
+            noteScaleNumber := Mod( noteNumber, MIDI_NOTE_SIZE )
+            noteNumber := noteNumber + M_MINOR_SHIFT[noteScaleNumber + 1]
+        }
+        If (autoScaleKey != 1)
+        {
+            keyShift := autoScaleKey - 1
+            If (keyShift > 6)
+            {
+                keyShift := keyShift - 12
+            }
+            noteNumber := noteNumber + keyShift
+        }
+    }
+    Return noteNumber
+}
+
+
+; fixed velocity
+MidiNoteOn:
+    event := midi.MidiIn()
+    altLabel := "AMTMidiNoteOn" . event.noteNumber
+    If IsLabel( altLabel )
+    {
+        Gosub %altLabel%
+        Return
+    }
+	; MsgBox %event.velocity%
+    If (fixedVelocity > 0 && fixedVelocity < 128)
+    {
+        newVel := fixedVelocity
+    }else{
+        newVel = event.velocity
+    }
+    newNum := transformMidiNote(event)
+    Midi.MidiOut("N1", 1, newNum, newVel)
+    ;設定ウィンドウがアクティブなら情報表示
+    IfWinActive ahk_pid %__pid%
+    {
+        midiEvent.note := MIDI_NOTES[ noteScaleNumber + 1 ]
+
+    ; Determine the octave of the note in the scale 
+    noteOctaveNumber := Floor( midiEvent.noteNumber / MIDI_NOTE_SIZE )
+        ; Create a friendly name for the note and octave, ie: "C4"
+        newNoteName := MIDI_NOTES[ Mod( newNum, MIDI_NOTE_SIZE ) + 1 ] . MIDI_OCTAVES[ Floor( newNum / MIDI_NOTE_SIZE ) + 1 ]
+        log := event.noteNumber . " (" . event.noteName . ") vel:" . event.velocity . " -> " . newNum . " (" . newNoteName . ") vel:" . newVel
+        GuiControl, 7:Text, SLogTxt, %log%
+    }
+Return
+
+MidiNoteOff:
+    event := midi.MidiIn()
+    altLabel := "AMTMidiNoteOff" . event.noteNumber
+    If IsLabel( altLabel )
+    {
+        Gosub %altLabel%
+        Return
+    }    noteNumber := transformMidiNote(event)
+    Midi.MidiOut("N0", 1, noteNumber, event.velocity)
+Return
+
+;;;;;;;;;; setting ;;;;;;;;;;
+
+; fixedVelocityを変更するCCが来たら設定ウィンドウを表示
+setFixedVelocityFromCC()
+{
+    If (CCMode==0){
+        fixedVelocity := midi.MidiIn().value
+    }else{
+        step := 1
+        If (fixedVelocity <= 100 && fixedVelocityCCStep > 0 && fixedVelocityCCStep < 20){
+            step := fixedVelocityCCStep
+        }
+        fixedVelocity := fixedVelocity + (midi.MidiIn().value - 64)*step
+    }
+    If (fixedVelocity > 127){
+        fixedVelocity := 127
+    }Else if(fixedVelocity < 0){
+        fixedVelocity := 0
+    }
+
+    GuiControl, 9:Text, CCTxt, %fixedVelocity%
+    Gui 9:Show, w340 h100, Fixed Velocity
+    SetTimer, HideSettingCCFV, 1000
+    updateSettingWindow()
+}
+
+; 設定ウィンドウ
+
+global SFVSlidr
+global SFVTxt
+global SScaleKey
+global SScale
+global SLogTxt
+initSettingGui(){
+    Gui 7: -MinimizeBox -MaximizeBox
+    Gui 7: Font, s12, Segoe UI
+    Gui 7: Add, Text, x8 y16 w120 h30 +0x200 Right, Fixed Velocity:
+    Gui 7: Add, Slider, vSFVSlidr gSlidrChanged x136 y16 w230 h32 +NoTicks +Center Range0-127, %fixedVelocity%
+    Gui 7: Add, Text, vSFVTxt x380 y16 w53 h30 +0x200, %fixedVelocity%
+
+    Gui 7: Add, Text, x8 y64 w120 h30 +0x200 Right, Auto Scale:
+    Gui 7: Add, DropDownList, vSScaleKey gSScaleKeyChanged AltSubmit x136 y64 w87, C|C#/Db|D|D#/Eb|E|F|F#/Gb|G|G#/Ab|A|A#/Bb|B
+    Gui 7: Add, DropDownList, vSScale gSScaleChanged AltSubmit x240 y64 w90, Major|Minor|H-Minor|M-Minor
+    Gui 7: Add, Text,vSLogTxt x16 y110 w380 h26 +0x200,
+    Gui 7: Font
+}
+
+; Esc押したら閉じる
+7GuiEscape:
+    Gui ,7: Cancel
+Return
+
+; Settingメニュー項目
+Setting:
+;   Msgbox, Menu
+    showSetting()
+Return
+
+; 設定ウィンドウを表示
+showSetting()
+{
+    updateSettingWindow()
+    Gui 7: Show, w440 h200, AHK-MIDI-Transformer Setting
+    Return
+}
+updateSettingWindow()
+{
+    GuiControl , 7:, SFVSlidr, %fixedVelocity%
+    GuiControl , 7:Text, SFVTxt, %fixedVelocity%
+    GuiControl, 7:Choose, SScaleKey, %autoScaleKey%
+    GuiControl, 7:Choose, SScale, %autoScale%
+}
+
+SScaleKeyChanged:
+    GuiControlGet, outputVar, 7:, SScaleKey
+    autoScaleKey := outputVar
+Return
+
+SScaleChanged:
+    GuiControlGet, outputVar, 7:, SScale
+    autoScale := outputVar
+Return
+
+; 設定ウィンドウのスライダーが動いたら
+SlidrChanged:
+    GuiControlGet, outputVar, 7:, SFVSlidr
+    fixedVelocity := outputVar
+    updateSettingWindow()
+    ; GuiControl, 7:Text, SFVTxt, %fixedVelocity%
+Return
+
+
+; fixedVelocity 変更中のウィンドウ
+global CCTxt
+
+initSettingCCFV()
+{
+    Gui 9:-MinimizeBox -MaximizeBox
+    Gui 9:Font, s60
+    Gui 9:Add, Text, vCCTxt x24 y16 w296 h62 +0x200 Center, %fixedVelocity%
+    Gui 9:Font
+}
+
+; Esc押したら閉じる
+9GuiEscape:
+    Gui ,9: Cancel
+Return
+
+showSettingCCFV()
+{
+    Gui 9: Show, w348 h98, Window
+}
+
+HideSettingCCFV:
+    Gui 9:Hide
+    SetTimer, HideSettingCCFV, Off
+Return
+
+
+
+
+; 設定読み込み/保存
+loadSettingValue(name, defaultVal)
+{
+    IniRead, result, %settingFilePath%, mySettings, %name%
+    If (result <> "ERROR"){
+        return result
+    }
+    return defaultVal
+}
+
+loadSetting()
+{
+    fixedVelocity := loadSettingValue("fixedVelocity", fixedVelocity)
+    fixedVelocityCC := loadSettingValue("fixedVelocityCC", fixedVelocityCC)
+    fixedVelocityCCStep :=loadSettingValue("fixedVelocityCCStep", fixedVelocityCCStep)
+    CCMode :=loadSettingValue("CCMode", CCMode)
+
+}
+
+saveSettingValue(name, val)
+{
+    IniWrite, %val%, %settingFilePath%, mySettings, %name%
+}
+
+saveSetting()
+{
+    saveSettingValue("fixedVelocity", fixedVelocity)
+    saveSettingValue("fixedVelocityCC", fixedVelocityCC)
+    saveSettingValue("fixedVelocityCCStep", fixedVelocityCCStep)
+    saveSettingValue("CCMode", CCMode)
+    ; IniWrite, %fixedVelocity%, %settingFilePath%, mySettings, fixedVelocity
+}
+
+ExitSub:
+    saveSetting()
+    midi.SaveIOSetting(settingFilePath)
+ExitApp
