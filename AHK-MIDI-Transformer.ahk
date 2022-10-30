@@ -248,7 +248,7 @@ Return
 showSetting()
 {
     updateSettingWindow()
-    Gui 7: Show, w440 h200, AHK-MIDI-Transformer Setting
+    Gui 7: Show, w440 h140, AHK-MIDI-Transformer Setting
     Return
 }
 updateSettingWindow()
