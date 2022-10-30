@@ -25,7 +25,7 @@ C Majorにしておくと何も変更されない通常通りの動作となり�
 
 ### AHK-MIDI-Transformer.ahk
 
-本体です。
+本体です。通常はこれを起動させます。
 
 
 ### Midi.ahk
