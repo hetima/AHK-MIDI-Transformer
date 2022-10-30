@@ -41,13 +41,6 @@ Global CCMode := 1
 ;iniに書き込まれる設定おわり
 
 
-
-
-
-; Global octaveShiftKey := []
-; Global octaveShiftRange := []
-
-
 ; オートスケール
 Global autoScaleKey := 1 ;1==C ~ 12==B
 Global autoScale := 1 ;1==Major 2==Minor 3==H-Minor 4==M-Minor
@@ -56,8 +49,8 @@ Global octaveShift := 0
 Global autoScaleOff := False
 
 
-
-#include ../repos/AutoHotkey-Midi/Midi.ahk
+; このファイルと同じ階層にある Midi.ahk を読み込む
+#include %A_LineFile%\..\Midi.ahk
 Global midi := new Midi()
 OnExit, ExitSub
 midi.LoadIOSetting(settingFilePath)
