@@ -76,11 +76,24 @@ Return
 
 ・ `AMTMidiNoteOnノート名:` ラベル  
 ・ `AMTMidiNoteOffノート名:` ラベル  
-ノートオン/オフをノートごとに受け取るラベルです。C3などの文字もしくは生の値です。数値の確認はセッティングウィンドウを前面に出して鍵盤を押すと表示されます。このラベルが実行されると発音はされません。`intercepted` の変更は不要ですし変更しても意味がありません。  
-ノートごとのラベルが存在する場合、そのノートでは  `AMTMidiNoteOn:` は実行されません。
+ノートオン/オフをノートごとに受け取るラベルです。C3などの文字もしくは生の値です。数値の確認はセッティングウィンドウを前面に出して鍵盤を押すと表示されます。このラベルが実行されると発音はされません。個別ラベル実行時に `intercepted` は `True` になっています。ノートごとのラベルが存在する場合、そのノートでは  `AMTMidiNoteOn/Off:` は実行されませんが、個別ラベルの中で `intercepted` を `False` にすると `AMTMidiNoteOn/Off:` も実行され、そのまま変更がなければパススルーもされます。  
+
+```ahk
+AMTMidiNoteOnC1:
+    ; 上記の AMTMidiNoteOn: に対応させたい場合、Ctrl が押されていたら intercepted := False とする
+    If (GetKeyState("Ctrl"))
+    {
+        midi.MidiIn().intercepted := False
+        Return
+    }
+    ; main code
+Return
+```
+
 
 ・ `AMTMidiControlChange:` ラベル  
 すべてのCCを受け取るラベルです。`intercepted` の仕様は `AMTMidiNoteOn:` と同等です。
+
 ```ahk
 AMTMidiControlChange:
     event := midi.MidiIn()
@@ -93,8 +106,7 @@ Return
 ```
 
 ・ `AMTMidiControlChange数字:` ラベル  
-CCを個別に受け取るラベルです。 `intercepted` の変更は不要ですし変更しても意味がありません。  
-個別のラベルが存在する場合、そのCCでは  `AMTMidiControlChange:` は実行されません。
+CCを個別に受け取るラベルです。個別のラベルが存在する場合、そのCCでは  `AMTMidiControlChange:` は実行されませんが、個別ラベルの中で `intercepted` を `False` にすると `AMTMidiControlChange:` も実行され、そのまま変更がなければパススルーもされます。  
 
 ・ `SendAllNoteOff()`  
 オールノートオフをアウトプットデバイスに送信する関数です。
@@ -102,7 +114,7 @@ CCを個別に受け取るラベルです。 `intercepted` の変更は不要で
 ・ `SetAutoScale(key, scale, showPanel = False)`  
 Auto Scaleの設定を変更する関数です。`Key` はC=1～B=12、`scale` は Major=1 Minor=2 H-Minor=3 M-Minor=4 の数字を指定します。`showPanel` を `True` にしておくとパネルを表示します。
 
-```
+```ahk
 AMTMidiNoteOn:
     ;Ctrlを押しながら鍵盤を弾くとAutoScale設定を変更する例
     If (GetKeyState("Ctrl"))

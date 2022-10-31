@@ -97,10 +97,10 @@ MidiControlChange:
     altLabel := "AMTMidiControlChange" . event.controller
     If IsLabel( altLabel )
     {
-        Gosub %altLabel%
         event.intercepted := True
+        Gosub %altLabel%
     }
-    else If IsLabel( "AMTMidiControlChange" )
+    If(!event.intercepted && IsLabel( "AMTMidiControlChange" ))
     {
         ;ラベルが存在しないと直接指定できないので変数に入れる
         altLabel := "AMTMidiControlChange"
@@ -173,16 +173,16 @@ MidiNoteOn:
     altLabel := "AMTMidiNoteOn" . event.noteNumber
     If IsLabel( altLabel )
     {
-        Gosub %altLabel%
         event.intercepted := True
+        Gosub %altLabel%
     }
     else If IsLabel( "AMTMidiNoteOn" . event.noteName )
     {
         altLabel := "AMTMidiNoteOn" . event.noteName
-        Gosub %altLabel%
         event.intercepted := True
+        Gosub %altLabel%
     }
-    else If IsLabel( "AMTMidiNoteOn" )
+    If (!event.intercepted && IsLabel( "AMTMidiNoteOn" ))
     {
         ;ラベルが存在しないと直接指定できないので変数に入れる
         altLabel := "AMTMidiNoteOn"
@@ -225,16 +225,16 @@ MidiNoteOff:
     altLabel := "AMTMidiNoteOff" . event.noteNumber
     If IsLabel( altLabel )
     {
-        Gosub %altLabel%
         event.intercepted := True
+        Gosub %altLabel%
     }
     else If IsLabel( "AMTMidiNoteOff" . event.noteName )
     {
         altLabel := "AMTMidiNoteOff" . event.noteName
-        Gosub %altLabel%
         event.intercepted := True
+        Gosub %altLabel%
     }
-    else If IsLabel( "AMTMidiNoteOff" )
+    If (!event.intercepted && IsLabel( "AMTMidiNoteOff" ))
     {
         ;ラベルが存在しないと直接指定できないので変数に入れる
         altLabel := "AMTMidiNoteOff"
