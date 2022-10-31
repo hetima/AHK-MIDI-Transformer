@@ -29,6 +29,22 @@ AMTMidiNoteOn42:
     }
 Return
 
+;端の黒鍵を押下してる間オクターブを上げ下げ
+AMTMidiNoteOn70:
+	octaveShift -= 2
+Return
+AMTMidiNoteOff70:
+	octaveShift += 2
+    SendAllNoteOff()
+Return
+AMTMidiNoteOn42:
+	octaveShift += 2
+Return
+AMTMidiNoteOff42:
+	octaveShift -= 2
+    SendAllNoteOff()
+Return
+
 ; Ctrl + 鍵盤でオクターブシフト
 AMTMidiNoteOn41:
     If (GetKeyState("Ctrl"))
