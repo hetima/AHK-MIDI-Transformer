@@ -46,6 +46,10 @@ AHK-MIDI-Transformer.ahk を読み込んで更に機能を追加したスクリ�
 
 AHK-MIDI-Transformer.ahk を読み込んで更に機能を追加したスクリプトで使えるコード例
 
+・ `midi`  
+AutoHotkey-Midi のインスタンスがグローバル変数 `midi` に格納されています。
+
+
 ・ `AMTMidiNoteOn:` ラベル  
 すべてのノートオンを受け取るラベルです。 `midi.MidiIn()` で現在のMIDIイベントを取得し `intercepted` プロパティを `True` にすることによりパススルーされなくなり発音されなくなります。
 
