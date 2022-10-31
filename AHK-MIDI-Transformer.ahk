@@ -131,10 +131,9 @@ MidiControlChange:
 Return
 
 
-TransformMidiNote(noteEvent)
+TransformMidiNoteNumber(originalNoteNumber)
 {
-    noteNumber := noteEvent.noteNumber
-    noteNumber := octaveShift * MIDI_NOTE_SIZE + noteNumber
+    noteNumber := octaveShift * MIDI_NOTE_SIZE + originalNoteNumber
     If (!autoScaleOff)
     {
         If (autoScale == 2)
@@ -195,9 +194,9 @@ MidiNoteOn:
         {
             newVel := fixedVelocity
         }else{
-            newVel = event.velocity
+            newVel := event.velocity
         }
-        newNum := TransformMidiNote(event)
+        newNum := TransformMidiNoteNumber(event.noteNumber)
         Midi.MidiOut("N1", 1, newNum, newVel)
     }
     ;設定ウィンドウがアクティブなら情報表示
@@ -242,7 +241,7 @@ MidiNoteOff:
     }
     If (!event.intercepted)
     {
-        noteNumber := TransformMidiNote(event)
+        noteNumber := TransformMidiNoteNumber(event.noteNumber)
         Midi.MidiOut("N0", 1, noteNumber, event.velocity)
     }
 Return
