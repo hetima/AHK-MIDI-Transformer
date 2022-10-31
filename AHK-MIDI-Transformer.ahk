@@ -462,7 +462,7 @@ InitSettingGui(){
     Gui 7: Add, DropDownList, vSScaleKey gSScaleKeyChanged AltSubmit x120 y64 w78, C|C#/Db|D|D#/Eb|E|F|F#/Gb|G|G#/Ab|A|A#/Bb|B
     Gui 7: Add, DropDownList, vSScale gSScaleChanged AltSubmit x208 y64 w90, Major|Minor|H-Minor|M-Minor
     Gui 7: Add, Text, x302 y64 w64 h30 +0x200 +Right, Octave:
-    Gui 7: Add, DropDownList, vSOctv gOctvChanged x374 y64 w50, -4|-3|-2|-1|0|+1|+2|+3|+4
+    Gui 7: Add, DropDownList, vSOctv gOctvChanged x374 y64 w50, -4|-3|-2|-1|0|1|2|3|4
 
     Gui 7: Add, CheckBox, vSBKCEnabled gBKCChanged x16 y110 w156 h30, Chord in Black Key
     Gui 7: Add, Text, x176 y110 w68 h30 +0x200 +Right, Root C#:
@@ -499,6 +499,7 @@ UpdateSettingWindow()
     GuiControl , 7:Text, SFVTxt, %fixedVelocity%
     GuiControl, 7:Choose, SScaleKey, %autoScaleKey%
     GuiControl, 7:Choose, SScale, %autoScale%
+    GuiControl, 7:ChooseString, SOctv, %octaveShift%
     GuiControl, 7:, SBKCEnabled, %blackKeyChordEnabled%
     GuiControl, 7:ChooseString, SBKCRoot, %blackKeyChordRootKey%
     GuiControl, 7:ChooseString, SBKCPitch, %blackKeyChordRootPitch%
