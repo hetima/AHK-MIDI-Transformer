@@ -83,7 +83,9 @@ Process, Exist,
 global __pid := ErrorLevel
 ; 必須初期化おわり
 
-Menu, Tray, Icon, %A_LineFile% \..\icon.ico
+If (FileExist(A_LineFile . "\..\icon.ico")){
+    Menu, Tray, Icon, %A_LineFile% \..\icon.ico
+}
 
 ; 初期化おわり
 Return
