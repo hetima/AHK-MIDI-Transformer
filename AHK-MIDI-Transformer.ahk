@@ -41,8 +41,8 @@ Global fixedVelocityCCStep := 5
 ; CC設定 0==絶対値 1==相対(65で+、63で-) 
 Global CCMode := 1
 
-; 黒鍵を弾くとコードになる。
-Global blackKeyChordEnabled := True
+; 黒鍵を弾くとコードになる。0==off 1==on
+Global blackKeyChordEnabled := 0
 ; C#を基準にする 0 ～ 5
 Global blackKeyChordRootKey := 3
 ; そのC#を弾くと鳴る音の高さ
@@ -405,10 +405,15 @@ SetChordInBlackKey(isEnabled, rootKey, rootPitch)
     blackKeyChordRootPitch := rootPitch
     updateSettingWindow()
 }
-SetChordInBlackKeyEnabled(isEnabled)
+
+SetChordInBlackKeyEnabled(isEnabled, showPanel = False)
 {
     blackKeyChordEnabled := isEnabled
     updateSettingWindow()
+    If (showPanel){
+        str := "CBK:" . (blackKeyChordEnabled ? "ON":"OFF")
+        ShowMessagePanel(str, "ChordInBlackKey")
+    }
 }
 SetChordInBlackKeyRootKey(rootKey)
 {
