@@ -41,7 +41,13 @@ Global fixedVelocityCCStep := 5
 ; CC設定 0==絶対値 1==相対(65で+、63で-) 
 Global CCMode := 1
 
-;iniに書き込まれる設定おわり
+; 黒鍵を弾くとコードになる。
+Global blackKeyChordEnabled := True
+; C#を基準にする 0 ～ 5
+Global blackKeyChordRootKey := 3
+; そのC#を弾くと鳴る音の高さ
+Global blackKeyChordRootPitch := 3 
+; iniに書き込まれる設定おわり
 
 
 ; オートスケール
@@ -65,13 +71,13 @@ Menu, Tray, Add, Setting
 midiEventPassThrough := True
 
 ;Global MIDI_NOTES     := [ "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" ]
-Global MIDI_SCALES    := ["Major", "Minor", "H-Minor", "M-Minor"]
-Global MIDI_SCALES_S  := ["", "min", "Hmin", "Mmin"]
+Global MIDI_SCALES     := ["Major", "Minor", "H-Minor", "M-Minor"]
+Global MIDI_SCALES_S   := ["", "min", "Hmin", "Mmin"]
 Global MAJOR_SHIFT     := [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
 Global MINOR_SHIFT     := [ 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, -1 ]
 Global H_MINOR_SHIFT   := [ 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0 ]
 Global M_MINOR_SHIFT   := [ 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0 ]
-Global SCALE_SHIFTS := [MAJOR_SHIFT, MINOR_SHIFT, H_MINOR_SHIFT, M_MINOR_SHIFT]
+Global SCALE_SHIFTS    := [MAJOR_SHIFT, MINOR_SHIFT, H_MINOR_SHIFT, M_MINOR_SHIFT]
 
 Process, Exist,
 global __pid := ErrorLevel
@@ -189,6 +195,9 @@ MidiNoteOn:
         altLabel := "AMTMidiNoteOn"
         Gosub %altLabel%
     }
+    If (!event.intercepted){
+        TryBlackKeyChord(event, True)
+    }
     If (!event.intercepted)
     {
         ; MsgBox %event.velocity%
@@ -235,6 +244,9 @@ MidiNoteOff:
         event.intercepted := True
         Gosub %altLabel%
     }
+    If (!event.intercepted){
+        TryBlackKeyChord(event, False)
+    }
     If (!event.intercepted && IsLabel( "AMTMidiNoteOff" ))
     {
         ;ラベルが存在しないと直接指定できないので変数に入れる
@@ -247,6 +259,94 @@ MidiNoteOff:
         Midi.MidiOut("N0", 1, noteNumber, event.velocity)
     }
 Return
+
+; 黒鍵でコードを弾く
+TryBlackKeyChord(event, isNoteOn)
+{
+    If (!blackKeyChordEnabled)
+    {
+        Return
+    }
+    If (InStr(event.note, "#") == 0){
+        Return
+    }
+    rootKey := ((blackKeyChordRootKey + 2) * 12) + 1
+    rootPitch := ((blackKeyChordRootPitch + 2) * 12)
+    ;ルートのC#からの差分を求め
+    diff := event.noteNumber - rootKey
+    if(diff == 0)
+    {
+        key := 0
+    }
+    ;黒鍵の差分　  -17 -15 -12|-10 -7 -5 -3  0  2  5  7  9|12 14 17
+    ;鳴らしたい音  -12|-10 -8  -7  -5 -3 -1  0  2  4  5  7  9 11|12
+    else if(diff > 0)
+    {
+        ;何番目の黒鍵なのか調べる
+        num := Floor(Mod(diff, 12)/2) + Floor(diff/12)*5
+        ;スケール内でその順番にあるノートを調べる
+        keys := [0,2,4,5,7,9,11]
+        key := keys[Mod(num, 7) + 1]
+        if(num>=7){
+            key := key + (Floor(num/7))*12
+        }
+    }
+    else
+    {
+        diff := Abs(diff)
+        mod := Mod(diff, 12)
+        num := Floor((mod==0 ? 0 : mod-1)/2) + Floor(diff/12)*5
+        keys := [0,1,3,5,7,8,10]
+        key := keys[Mod(num, 7) + 1]
+        if(num>=7){
+            key := key + (Floor(num/7))*12
+        }
+        key := -key
+    }
+    
+    MidiOutChord(key + rootPitch, event.velocity, isNoteOn)
+    event.intercepted := True
+    ; if(isNoteOn){
+    ;     ShowMessagePanel(num . ":" . key, "test")
+    ; }
+} 
+
+; コードCルートのノートを渡すとAutoScale考慮してコードを鳴らす
+MidiOutChord(noteNumber, vel, isNoteOn = True)
+{
+    If (fixedVelocity > 0 && fixedVelocity < 128)
+    {
+        newVel := fixedVelocity
+    }else{
+        newVel := vel
+    }
+    shifts := SCALE_SHIFTS[autoScale]
+
+    note1 := TransformMidiNoteNumber(noteNumber)
+
+    noteScaleNumber := Mod( noteNumber , MIDI_NOTE_SIZE ) + 1
+    minor := 0
+    If (noteScaleNumber == 3||noteScaleNumber == 5 || noteScaleNumber == 10||noteScaleNumber == 12){
+        minor := -1
+    }
+    note2 := TransformMidiNoteNumber(noteNumber + 4 + minor)
+    minor := 0
+    If (noteScaleNumber == 12){
+        minor := -1
+    }
+    note3 := TransformMidiNoteNumber(noteNumber + 7 + minor)
+    If (isNoteOn){
+        MidiStatus :=  143 + 1
+    }else{
+        MidiStatus :=  127 + 1
+    }
+    dwMidi := MidiStatus + (note1 << 8) + (newVel << 16)
+    midi.MidiOutRawData(dwMidi)
+    dwMidi := MidiStatus + (note2 << 8) + (newVel << 16)
+    midi.MidiOutRawData(dwMidi)
+    dwMidi := MidiStatus + (note3 << 8) + (newVel << 16)
+    midi.MidiOutRawData(dwMidi)
+}
 
 ;;;;;;;;;; setting ;;;;;;;;;;
 
@@ -298,6 +398,29 @@ SetOctaveShift(octv, showPanel = False)
     }
 }
 
+SetChordInBlackKey(isEnabled, rootKey, rootPitch)
+{
+    blackKeyChordEnabled := isEnabled
+    blackKeyChordRootKey := rootKey
+    blackKeyChordRootPitch := rootPitch
+    updateSettingWindow()
+}
+SetChordInBlackKeyEnabled(isEnabled)
+{
+    blackKeyChordEnabled := isEnabled
+    updateSettingWindow()
+}
+SetChordInBlackKeyRootKey(rootKey)
+{
+    blackKeyChordRootKey := rootKey
+    updateSettingWindow()
+}
+SetChordInBlackKeyRootPitch(rootPitch)
+{
+    blackKeyChordRootPitch := rootPitch
+    updateSettingWindow()
+}
+
 ; 設定ウィンドウ
 
 global SFVSlidr
@@ -306,6 +429,9 @@ global SScaleKey
 global SScale
 global SLogTxt
 global SOctv
+global SBKCEnabled
+global SBKCRoot
+global SBKCPitch
 InitSettingGui(){
     Gui 7: -MinimizeBox -MaximizeBox
     Gui 7: Font, s12, Segoe UI
@@ -316,9 +442,16 @@ InitSettingGui(){
     Gui 7: Add, Text, x0 y64 w110 h30 +0x200 Right, Auto Scale:
     Gui 7: Add, DropDownList, vSScaleKey gSScaleKeyChanged AltSubmit x120 y64 w78, C|C#/Db|D|D#/Eb|E|F|F#/Gb|G|G#/Ab|A|A#/Bb|B
     Gui 7: Add, DropDownList, vSScale gSScaleChanged AltSubmit x208 y64 w90, Major|Minor|H-Minor|M-Minor
-    Gui 7:Add, Text, x302 y64 w64 h30 +0x200 +Right, Octave:
-    Gui 7:Add, DropDownList, vSOctv gOctvChanged x374 y64 w50, -4|-3|-2|-1|0|+1|+2|+3|+4
-    Gui 7: Add, Text,vSLogTxt x16 y110 w380 h26 +0x200,
+    Gui 7: Add, Text, x302 y64 w64 h30 +0x200 +Right, Octave:
+    Gui 7: Add, DropDownList, vSOctv gOctvChanged x374 y64 w50, -4|-3|-2|-1|0|+1|+2|+3|+4
+
+    Gui 7: Add, CheckBox, vSBKCEnabled gBKCChanged x16 y110 w156 h30, Chord in Black Key
+    Gui 7: Add, Text, x176 y110 w68 h30 +0x200 +Right, Root C#:
+    Gui 7: Add, DropDownList, vSBKCRoot gBKCChanged x248 y110 w50, 0|1|2|3|4|5
+    Gui 7: Add, Text, x312 y110 w50 h30 +0x200 +Right, Pitch:
+    Gui 7: Add, DropDownList, vSBKCPitch gBKCChanged x371 y110 w50, 0|1|2|3|4|5
+
+    Gui 7: Add, Text,vSLogTxt x16 y150 w380 h26 +0x200,
     Gui 7: Font
 }
 
@@ -337,16 +470,19 @@ Return
 ShowSetting()
 {
     updateSettingWindow()
-    Gui 7: Show, w440 h140, AHK-MIDI-Transformer Setting
+    Gui 7: Show, w440 h180, AHK-MIDI-Transformer Setting
     Return
 }
+
 UpdateSettingWindow()
 {
     GuiControl , 7:, SFVSlidr, %fixedVelocity%
     GuiControl , 7:Text, SFVTxt, %fixedVelocity%
     GuiControl, 7:Choose, SScaleKey, %autoScaleKey%
     GuiControl, 7:Choose, SScale, %autoScale%
-    GuiControl, 7:ChooseString, SOctv, %octaveShift%
+    GuiControl, 7:, SBKCEnabled, %blackKeyChordEnabled%
+    GuiControl, 7:ChooseString, SBKCRoot, %blackKeyChordRootKey%
+    GuiControl, 7:ChooseString, SBKCPitch, %blackKeyChordRootPitch%
 }
 
 SScaleKeyChanged:
@@ -366,6 +502,17 @@ OctvChanged:
     octaveShift := outputVar
     SendAllNoteOff()
 Return
+
+BKCChanged:
+    GuiControlGet, outputVar, 7:, SBKCEnabled
+    blackKeyChordEnabled := outputVar
+    GuiControlGet, outputVar, 7:, SBKCRoot
+    blackKeyChordRootKey := outputVar
+    GuiControlGet, outputVar, 7:, SBKCPitch
+    blackKeyChordRootPitch := outputVar
+    SendAllNoteOff()
+Return
+
 
 ; 設定ウィンドウのスライダーが動いたら
 SlidrChanged:
@@ -424,6 +571,9 @@ LoadSetting()
     fixedVelocityCC := LoadSettingValue("fixedVelocityCC", fixedVelocityCC)
     fixedVelocityCCStep :=LoadSettingValue("fixedVelocityCCStep", fixedVelocityCCStep)
     CCMode :=LoadSettingValue("CCMode", CCMode)
+    blackKeyChordEnabled :=LoadSettingValue("blackKeyChordEnabled", blackKeyChordEnabled)
+    blackKeyChordRootKey :=LoadSettingValue("blackKeyChordRootKey", blackKeyChordRootKey)
+    blackKeyChordRootPitch :=LoadSettingValue("blackKeyChordRootPitch", blackKeyChordRootPitch)
 
 }
 
@@ -438,6 +588,9 @@ SaveSetting()
     SaveSettingValue("fixedVelocityCC", fixedVelocityCC)
     SaveSettingValue("fixedVelocityCCStep", fixedVelocityCCStep)
     SaveSettingValue("CCMode", CCMode)
+    SaveSettingValue("blackKeyChordEnabled", blackKeyChordEnabled)
+    SaveSettingValue("blackKeyChordRootKey", blackKeyChordRootKey)
+    SaveSettingValue("blackKeyChordRootPitch", blackKeyChordRootPitch)
     ; IniWrite, %fixedVelocity%, %settingFilePath%, mySettings, fixedVelocity
 }
 
