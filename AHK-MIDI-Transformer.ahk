@@ -93,29 +93,44 @@ SendAllNoteOff(ch = 1)
 ; CC
 MidiControlChange:
     event := midi.MidiIn()
+    event.intercepted := False
     altLabel := "AMTMidiControlChange" . event.controller
     If IsLabel( altLabel )
     {
         Gosub %altLabel%
-        Return
+        event.intercepted := True
     }
-    cc := event.controller
-    If (cc == fixedVelocityCC)
+    else If IsLabel( "AMTMidiControlChange" )
     {
-        SetFixedVelocityFromCC()
-    }else{
-        midi.MidiOutRawData(event.rawBytes)
+        ;ラベルが存在しないと直接指定できないので変数に入れる
+        altLabel := "AMTMidiControlChange"
+        Gosub %altLabel%
+    }
+    If (!event.intercepted){
+        cc := event.controller
+        If (cc == fixedVelocityCC)
+        {
+            SetFixedVelocityFromCC()
+        }else{
+            midi.MidiOutRawData(event.rawBytes)
+        }
     }
     ;設定ウィンドウがアクティブなら情報表示
     IfWinActive ahk_pid %__pid%
     {
-        log := "CC:" event.controller . " (" . event.value . ")"
+        If (!event.intercepted)
+        {
+            log := "CC:" event.controller . " (" . event.value . ")"
+        }
+        else
+        {
+            log := "CC:" event.controller . " (" . event.value . ")  -> intercepted"
+        }
         GuiControl, 7:Text, SLogTxt, %log%
     }
 Return
 
 
-Return
 TransformMidiNote(noteEvent)
 {
     noteNumber := noteEvent.noteNumber
@@ -163,7 +178,9 @@ MidiNoteOn:
     }
     else If IsLabel( "AMTMidiNoteOn" )
     {
-        Gosub AMTMidiNoteOn
+        ;ラベルが存在しないと直接指定できないので変数に入れる
+        altLabel := "AMTMidiNoteOn"
+        Gosub %altLabel%
     }
     If (!event.intercepted)
     {
