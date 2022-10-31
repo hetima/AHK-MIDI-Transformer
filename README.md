@@ -136,3 +136,6 @@ AMTMidiNoteOn:
     }
 Return
 ```
+
+・ ShowMessagePanel(txt, title = "Message")  
+引数 `txt` を大きな文字で表示するウィンドウを表示します。1秒経過するかescを押すとウィンドウは閉じます。

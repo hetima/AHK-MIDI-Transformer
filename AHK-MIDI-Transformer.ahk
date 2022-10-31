@@ -59,7 +59,7 @@ OnExit, ExitSub
 midi.LoadIOSetting(settingFilePath)
 LoadSetting()
 InitSettingGui()
-InitSettingCCFV()
+InitSettingMessageGui()
 Menu, Tray, Add
 Menu, Tray, Add, Setting
 midiEventPassThrough := True
@@ -67,9 +67,11 @@ midiEventPassThrough := True
 ;Global MIDI_NOTES     := [ "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" ]
 Global MIDI_SCALES    := ["Major", "Minor", "H-Minor", "M-Minor"]
 Global MIDI_SCALES_S  := ["", "min", "Hmin", "Mmin"]
+Global MAJOR_SHIFT     := [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
 Global MINOR_SHIFT     := [ 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, -1 ]
 Global H_MINOR_SHIFT   := [ 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0 ]
 Global M_MINOR_SHIFT   := [ 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0 ]
+Global SCALE_SHIFTS := [MAJOR_SHIFT, MINOR_SHIFT, H_MINOR_SHIFT, M_MINOR_SHIFT]
 
 Process, Exist,
 global __pid := ErrorLevel
@@ -266,9 +268,7 @@ SetFixedVelocityFromCC()
         fixedVelocity := 0
     }
 
-    GuiControl, 9:Text, CCTxt, %fixedVelocity%
-    Gui 9:Show, w360 h100, Fixed Velocity
-    SetTimer, HideSettingCCFV, 1000
+    ShowMessagePanel(fixedVelocity, "Fixed Velocity")
     updateSettingWindow()
 }
 
@@ -279,9 +279,7 @@ SetAutoScale(key, scale, showPanel = False)
     UpdateSettingWindow()
     If (showPanel){
         str := MIDI_NOTES[key] . " " . MIDI_SCALES_S[scale]
-        GuiControl, 9:Text, CCTxt, %str%
-        Gui 9:Show, w360 h100, Auto Scale
-        SetTimer, HideSettingCCFV, 1000
+        ShowMessagePanel(str, "Auto Scale")
     }
 }
 
@@ -351,14 +349,14 @@ SlidrChanged:
 Return
 
 
-; fixedVelocity 変更中のウィンドウ
-global CCTxt
+; メッセージパネル
+global MsgTxt
 
-InitSettingCCFV()
+InitSettingMessageGui()
 {
     Gui 9:-MinimizeBox -MaximizeBox
     Gui 9:Font, s60
-    Gui 9:Add, Text, vCCTxt x0 y16 w360 h62 +0x200 Center, %fixedVelocity%
+    Gui 9:Add, Text, vMsgTxt x0 y16 w360 h62 +0x200 Center, %fixedVelocity%
     Gui 9:Font
 }
 
@@ -367,9 +365,11 @@ InitSettingCCFV()
     Gui ,9: Cancel
 Return
 
-ShowSettingCCFV()
+ShowMessagePanel(txt, title = "Message")
 {
-    Gui 9: Show, w348 h98, Window
+    GuiControl, 9:Text, MsgTxt, %txt%
+    Gui 9:Show, w360 h100, %title%
+    SetTimer, HideSettingCCFV, 1000
 }
 
 HideSettingCCFV:
