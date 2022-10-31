@@ -98,6 +98,18 @@ SendAllNoteOff(ch = 1)
     midi.MidiOutRawData(dwMidi)
 }
 
+SendAllSoundOff(ch = 1)
+{
+    dwMidi := (176+ch) + (120 << 8) + (0 << 16)
+    midi.MidiOutRawData(dwMidi)
+}
+
+SendResetAllController(ch = 1)
+{
+    dwMidi := (176+ch) + (121 << 8) + (0 << 16)
+    midi.MidiOutRawData(dwMidi)
+}
+
 ;;;;;;;;;; transform ;;;;;;;;;;
 
 ; CC
