@@ -176,6 +176,12 @@ MidiNoteOn:
         Gosub %altLabel%
         event.intercepted := True
     }
+    else If IsLabel( "AMTMidiNoteOn" . event.noteName )
+    {
+        altLabel := "AMTMidiNoteOn" . event.noteName
+        Gosub %altLabel%
+        event.intercepted := True
+    }
     else If IsLabel( "AMTMidiNoteOn" )
     {
         ;ラベルが存在しないと直接指定できないので変数に入れる
@@ -219,6 +225,12 @@ MidiNoteOff:
     altLabel := "AMTMidiNoteOff" . event.noteNumber
     If IsLabel( altLabel )
     {
+        Gosub %altLabel%
+        event.intercepted := True
+    }
+    else If IsLabel( "AMTMidiNoteOff" . event.noteName )
+    {
+        altLabel := "AMTMidiNoteOff" . event.noteName
         Gosub %altLabel%
         event.intercepted := True
     }
