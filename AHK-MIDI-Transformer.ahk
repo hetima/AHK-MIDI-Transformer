@@ -283,6 +283,21 @@ SetAutoScale(key, scale, showPanel = False)
     }
 }
 
+IncreaseOctaveShift(num, showPanel = False)
+{
+    SetOctaveShift(octaveShift + num, showPanel)
+}
+
+SetOctaveShift(octv, showPanel = False)
+{
+    octaveShift := octv
+    UpdateSettingWindow()
+    If (showPanel){
+        str := MIDI_NOTES[key] . " " . MIDI_SCALES_S[scale]
+        ShowMessagePanel(str, "Octave Shift")
+    }
+}
+
 ; 設定ウィンドウ
 
 global SFVSlidr
@@ -290,16 +305,19 @@ global SFVTxt
 global SScaleKey
 global SScale
 global SLogTxt
+global SOctv
 InitSettingGui(){
     Gui 7: -MinimizeBox -MaximizeBox
     Gui 7: Font, s12, Segoe UI
-    Gui 7: Add, Text, x8 y16 w120 h30 +0x200 Right, Fixed Velocity:
-    Gui 7: Add, Slider, vSFVSlidr gSlidrChanged x136 y16 w230 h32 +NoTicks +Center Range0-127, %fixedVelocity%
+    Gui 7: Add, Text, x0 y16 w110 h30 +0x200 Right, Fixed Velocity:
+    Gui 7: Add, Slider, vSFVSlidr gSlidrChanged x120 y16 w230 h32 +NoTicks +Center Range0-127, %fixedVelocity%
     Gui 7: Add, Text, vSFVTxt x380 y16 w53 h30 +0x200, %fixedVelocity%
 
-    Gui 7: Add, Text, x8 y64 w120 h30 +0x200 Right, Auto Scale:
-    Gui 7: Add, DropDownList, vSScaleKey gSScaleKeyChanged AltSubmit x136 y64 w87, C|C#/Db|D|D#/Eb|E|F|F#/Gb|G|G#/Ab|A|A#/Bb|B
-    Gui 7: Add, DropDownList, vSScale gSScaleChanged AltSubmit x240 y64 w90, Major|Minor|H-Minor|M-Minor
+    Gui 7: Add, Text, x0 y64 w110 h30 +0x200 Right, Auto Scale:
+    Gui 7: Add, DropDownList, vSScaleKey gSScaleKeyChanged AltSubmit x120 y64 w78, C|C#/Db|D|D#/Eb|E|F|F#/Gb|G|G#/Ab|A|A#/Bb|B
+    Gui 7: Add, DropDownList, vSScale gSScaleChanged AltSubmit x208 y64 w90, Major|Minor|H-Minor|M-Minor
+    Gui 7:Add, Text, x302 y64 w64 h30 +0x200 +Right, Octave:
+    Gui 7:Add, DropDownList, vSOctv gOctvChanged x374 y64 w50, -4|-3|-2|-1|0|+1|+2|+3|+4
     Gui 7: Add, Text,vSLogTxt x16 y110 w380 h26 +0x200,
     Gui 7: Font
 }
@@ -328,16 +346,25 @@ UpdateSettingWindow()
     GuiControl , 7:Text, SFVTxt, %fixedVelocity%
     GuiControl, 7:Choose, SScaleKey, %autoScaleKey%
     GuiControl, 7:Choose, SScale, %autoScale%
+    GuiControl, 7:ChooseString, SOctv, %octaveShift%
 }
 
 SScaleKeyChanged:
     GuiControlGet, outputVar, 7:, SScaleKey
     autoScaleKey := outputVar
+    SendAllNoteOff()
 Return
 
 SScaleChanged:
     GuiControlGet, outputVar, 7:, SScale
     autoScale := outputVar
+    SendAllNoteOff()
+Return
+
+OctvChanged:
+    GuiControlGet, outputVar, 7:, SOctv
+    octaveShift := outputVar
+    SendAllNoteOff()
 Return
 
 ; 設定ウィンドウのスライダーが動いたら
@@ -346,6 +373,7 @@ SlidrChanged:
     fixedVelocity := outputVar
     updateSettingWindow()
     ; GuiControl, 7:Text, SFVTxt, %fixedVelocity%
+    SendAllNoteOff()
 Return
 
 
