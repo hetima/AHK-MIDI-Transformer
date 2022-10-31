@@ -74,3 +74,20 @@ AMTMidiNoteOff70:
 	octaveShift := 0
     SendAllNoteOff()
 Return
+
+AMTMidiNoteOn:
+    ;Ctrlを押しながら鍵盤を弾くとAutoScale設定を変更する
+    If (GetKeyState("Ctrl"))
+    {
+        event := midi.MidiIn()
+        event.intercepted := True
+        scale := 1
+        ;Shiftも押すとマイナー
+        If (GetKeyState("Shift"))
+        {
+            scale := 2
+        }
+        key := Mod( event.noteNumber, MIDI_NOTE_SIZE )
+        setAutoScale(key + 1, scale, True)
+    }
+Return
