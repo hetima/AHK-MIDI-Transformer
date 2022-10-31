@@ -215,13 +215,24 @@ Return
 
 MidiNoteOff:
     event := midi.MidiIn()
+    event.intercepted := False
     altLabel := "AMTMidiNoteOff" . event.noteNumber
     If IsLabel( altLabel )
     {
         Gosub %altLabel%
-        Return
-    }    noteNumber := TransformMidiNote(event)
-    Midi.MidiOut("N0", 1, noteNumber, event.velocity)
+        event.intercepted := True
+    }
+    else If IsLabel( "AMTMidiNoteOff" )
+    {
+        ;ラベルが存在しないと直接指定できないので変数に入れる
+        altLabel := "AMTMidiNoteOff"
+        Gosub %altLabel%
+    }
+    If (!event.intercepted)
+    {
+        noteNumber := TransformMidiNote(event)
+        Midi.MidiOut("N0", 1, noteNumber, event.velocity)
+    }
 Return
 
 ;;;;;;;;;; setting ;;;;;;;;;;
