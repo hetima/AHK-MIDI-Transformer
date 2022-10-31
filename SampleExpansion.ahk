@@ -17,62 +17,60 @@ Global settingFilePath := A_ScriptDir . "\SampleExpansion.ini"
     showSetting()
 Return
 
-
-; AHK-MIDI-Transformer が MidiNoteOn/MidiNoteOff ですべてのノートを処理しているため、個別のラベルを使うと両方実行されてしまう
-; AMTMidiNoteOnノートナンバー:
-; AMTMidiNoteOffノートナンバー:
-; というラベルで受け取ることができる。C3などの文字もしくは生の値。数値の確認はセッティングウィンドウを前面に出して鍵盤を押すと表示される
-; このラベルが実行されると発音はされない
-
-;左の黒鍵を押下してる間オクターブを下げる（KOMPLETE KONTROL M32）
-AMTMidiNoteOn46:
-	octaveShift := -1
-Return
-AMTMidiNoteOff46:
-	octaveShift := 0
-    SendAllNoteOff()
-Return
-AMTMidiNoteOn44:
-	octaveShift := -2
-Return
-AMTMidiNoteOff44:
-	octaveShift := 0
-    SendAllNoteOff()
-Return
+; Ctrl + 鍵盤で Setting ウィンドウ表示
 AMTMidiNoteOn42:
-	octaveShift := -3
-    ;超低音域を鳴らすことはないし、キースイッチ系の領域なのでauto scaleはオフにする
-    autoScaleOff := True
-Return
-AMTMidiNoteOff42:
-	octaveShift := 0
-    autoScaleOff := False
-    SendAllNoteOff()
+    event := midi.MidiIn()
+    If (GetKeyState("Ctrl"))
+    {
+        showSetting()
+    }else{
+        ; 音を鳴らす
+        event.intercepted := False
+    }
 Return
 
-;右の黒鍵を押下してる間オクターブを上げる（KOMPLETE KONTROL M32）
-AMTMidiNoteOn66:
-	octaveShift := 1
+; Ctrl + 鍵盤でオクターブシフト
+AMTMidiNoteOn41:
+    If (GetKeyState("Ctrl"))
+    {
+        ; シフトも押すとリセット
+        If (GetKeyState("Shift")){
+            octaveShift := 0
+        }else{
+            octaveShift -= 1
+        }
+        ShowMessagePanel(octaveShift, "octaveShift")
+    }else{
+        ; 音を鳴らす
+        midi.MidiIn().intercepted := False
+    }
 Return
-AMTMidiNoteOff66:
-	octaveShift := 0
-    ;all note off
-    SendAllNoteOff()
+AMTMidiNoteOn43:
+    If (GetKeyState("Ctrl"))
+    {
+        ; シフトも押すとリセット
+        If (GetKeyState("Shift")){
+            octaveShift := 0
+        }else{
+            octaveShift += 1
+        }
+        ShowMessagePanel(octaveShift, "octaveShift")
+    }else{
+        ; 音を鳴らす
+        midi.MidiIn().intercepted := False
+    }
 Return
-AMTMidiNoteOn68:
-	octaveShift := 2
-Return
-AMTMidiNoteOff68:
-	octaveShift := 0
-    SendAllNoteOff()
-Return
-AMTMidiNoteOn70:
-	octaveShift := 3
-    ;autoScaleOff := True
-Return
-AMTMidiNoteOff70:
-	octaveShift := 0
-    SendAllNoteOff()
+
+; Ctrl + 鍵盤で Chord In Black Key のオンオフ切り替え
+AMTMidiNoteOn44:
+    event := midi.MidiIn()
+    If (GetKeyState("Ctrl"))
+    {
+        SetChordInBlackKeyEnabled(blackKeyChordEnabled ? 0:1, True)
+    }else{
+        ; 音を鳴らす
+        event.intercepted := False
+    }
 Return
 
 AMTMidiNoteOn:
