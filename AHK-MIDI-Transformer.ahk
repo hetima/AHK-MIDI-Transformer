@@ -64,7 +64,7 @@ Menu, Tray, Add
 Menu, Tray, Add, Setting
 midiEventPassThrough := True
 
-Global MIDI_NOTES     := [ "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" ]
+;Global MIDI_NOTES     := [ "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" ]
 Global MIDI_SCALES    := ["Major", "Minor", "H-Minor", "M-Minor"]
 Global MIDI_SCALES_S  := ["", "min", "Hmin", "Mmin"]
 Global MINOR_SHIFT     := [ 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, -1 ]
@@ -154,31 +154,44 @@ TransformMidiNote(noteEvent)
 ; fixed velocity
 MidiNoteOn:
     event := midi.MidiIn()
+    event.intercepted := False
     altLabel := "AMTMidiNoteOn" . event.noteNumber
     If IsLabel( altLabel )
     {
         Gosub %altLabel%
-        Return
+        event.intercepted := True
     }
-	; MsgBox %event.velocity%
-    If (fixedVelocity > 0 && fixedVelocity < 128)
+    else If IsLabel( "AMTMidiNoteOn" )
     {
-        newVel := fixedVelocity
-    }else{
-        newVel = event.velocity
+        Gosub AMTMidiNoteOn
     }
-    newNum := TransformMidiNote(event)
-    Midi.MidiOut("N1", 1, newNum, newVel)
+    If (!event.intercepted)
+    {
+        ; MsgBox %event.velocity%
+        If (fixedVelocity > 0 && fixedVelocity < 128)
+        {
+            newVel := fixedVelocity
+        }else{
+            newVel = event.velocity
+        }
+        newNum := TransformMidiNote(event)
+        Midi.MidiOut("N1", 1, newNum, newVel)
+    }
     ;設定ウィンドウがアクティブなら情報表示
     IfWinActive ahk_pid %__pid%
     {
-        midiEvent.note := MIDI_NOTES[ noteScaleNumber + 1 ]
-
-        ; Determine the octave of the note in the scale 
-        noteOctaveNumber := Floor( midiEvent.noteNumber / MIDI_NOTE_SIZE )
-        ; Create a friendly name for the note and octave, ie: "C4"
-        newNoteName := MIDI_NOTES[ Mod( newNum, MIDI_NOTE_SIZE ) + 1 ] . MIDI_OCTAVES[ Floor( newNum / MIDI_NOTE_SIZE ) + 1 ]
-        log := event.noteNumber . " (" . event.noteName . ") vel:" . event.velocity . " -> " . newNum . " (" . newNoteName . ") vel:" . newVel
+        If (!event.intercepted)
+        {
+            ; Determine the octave of the note in the scale 
+            noteOctaveNumber := Floor( midiEvent.noteNumber / MIDI_NOTE_SIZE )
+            ; Create a friendly name for the note and octave, ie: "C4"
+            newNoteName := MIDI_NOTES[ Mod( newNum, MIDI_NOTE_SIZE ) + 1 ] . MIDI_OCTAVES[ Floor( newNum / MIDI_NOTE_SIZE ) + 1 ]
+            log := event.noteNumber . " (" . event.noteName . ") vel:" . event.velocity . " -> " . newNum . " (" . newNoteName . ") vel:" . newVel
+        }
+        else
+        {
+            log := event.noteNumber . " (" . event.noteName . ") vel:" . event.velocity . " -> intercepted"
+        }
         GuiControl, 7:Text, SLogTxt, %log%
     }
 Return
