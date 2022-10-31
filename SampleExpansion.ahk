@@ -31,6 +31,7 @@ Return
 
 ;端の黒鍵を押下してる間オクターブを上げ下げ
 AMTMidiNoteOn70:
+    SendAllNoteOff()
 	octaveShift -= 2
 Return
 AMTMidiNoteOff70:
@@ -38,6 +39,7 @@ AMTMidiNoteOff70:
     SendAllNoteOff()
 Return
 AMTMidiNoteOn42:
+    SendAllNoteOff()
 	octaveShift += 2
 Return
 AMTMidiNoteOff42:
