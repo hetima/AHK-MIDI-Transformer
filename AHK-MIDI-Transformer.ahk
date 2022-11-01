@@ -442,7 +442,7 @@ SetChordInBlackKey(isEnabled, rootKey, rootPitch)
 
 SetChordInBlackKeyEnabled(isEnabled, showPanel = False)
 {
-    blackKeyChordEnabled := isEnabled
+    blackKeyChordEnabled := (isEnabled ? 1:0)
     updateSettingWindow()
     If (showPanel){
         str := "CBK:" . (blackKeyChordEnabled ? "ON":"OFF")
