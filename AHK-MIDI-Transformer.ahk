@@ -73,6 +73,13 @@ midiEventPassThrough := True
 ;Global MIDI_NOTES     := [ "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" ]
 Global MIDI_SCALES     := ["Major", "Minor", "H-Minor", "M-Minor"]
 Global MIDI_SCALES_S   := ["", "min", "Hmin", "Mmin"]
+
+Global MAJOR_KEYS      := [ 0, 2, 4, 5, 7, 9, 11 ] ;CDEFGAB
+Global MINOR_KEYS      := [ 0, 2, 3, 5, 7, 8, 10 ]
+Global H_MINOR_KEYS    := [ 0, 2, 3, 5, 7, 8, 11 ]
+Global M_MINOR_KEYS    := [ 0, 2, 3, 5, 7, 9, 11 ]
+Global _KEYS           := [MAJOR_KEYS, MINOR_KEYS, H_MINOR_KEYS, M_MINOR_KEYS]
+
 Global MAJOR_SHIFT     := [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
 Global MINOR_SHIFT     := [ 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, -1 ]
 Global H_MINOR_SHIFT   := [ 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0 ]
@@ -343,32 +350,62 @@ MidiOutChord(noteNumber, vel, isNoteOn = True)
     }else{
         newVel := vel
     }
-    shifts := SCALE_SHIFTS[autoScale]
-
-    note1 := TransformMidiNoteNumber(noteNumber)
-
-    noteScaleNumber := Mod( noteNumber , MIDI_NOTE_SIZE ) + 1
-    minor := 0
-    If (noteScaleNumber == 3||noteScaleNumber == 5 || noteScaleNumber == 10||noteScaleNumber == 12){
-        minor := -1
-    }
-    note2 := TransformMidiNoteNumber(noteNumber + 4 + minor)
-    minor := 0
-    If (noteScaleNumber == 12){
-        minor := -1
-    }
-    note3 := TransformMidiNoteNumber(noteNumber + 7 + minor)
     If (isNoteOn){
         MidiStatus :=  143 + 1
     }else{
         MidiStatus :=  127 + 1
     }
-    dwMidi := MidiStatus + (note1 << 8) + (newVel << 16)
-    midi.MidiOutRawData(dwMidi)
-    dwMidi := MidiStatus + (note2 << 8) + (newVel << 16)
-    midi.MidiOutRawData(dwMidi)
-    dwMidi := MidiStatus + (note3 << 8) + (newVel << 16)
-    midi.MidiOutRawData(dwMidi)
+
+    keys := _KEYS[autoScale]
+    ; Cにする
+    diff := Mod(noteNumber, 12)
+    diff2 := 0
+    For, i, key In MAJOR_KEYS
+    {
+        if(diff<=key){
+            diff2 := i-1
+            Break
+        }
+    }
+    
+    noteNumber := noteNumber - diff
+    noteNumber := TransformMidiNoteNumber(noteNumber)
+    ; 度数
+    chord := [1,3,5]
+    ;chord := [1,5,8]
+    For i, chordNote In chord
+    {
+        ; For, j, key In MAJOR_KEYS
+        ; {
+        ;     if(chordNote<=key){
+        ;         chordNote := j-1
+        ;         Break
+        ;     }
+        ; }
+        octave := 0
+        tone := 0
+        StringReplace, chordNote, chordNote, ! , , All 
+        If (ErrorLevel == 0){
+            octave := -1
+        }
+        StringReplace, chordNote, chordNote, # , , All 
+        If (ErrorLevel == 0){
+            tone += 1
+        }
+        StringReplace, chordNote, chordNote, b , , All 
+        If (ErrorLevel == 0){
+            tone -= 1
+        }
+        chordNote += diff2 -1
+        val1 := Mod(chordNote, 7)+1
+        diff3 := Floor(chordNote/7)*12
+        shft := keys[val1]
+
+        note := noteNumber + shft + diff3 + (octave * 12) + tone
+
+        dwMidi := MidiStatus + ((note) << 8) + (newVel << 16)
+        midi.MidiOutRawData(dwMidi)
+    }
 }
 
 ;;;;;;;;;; setting ;;;;;;;;;;
