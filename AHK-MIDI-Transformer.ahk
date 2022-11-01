@@ -409,14 +409,17 @@ SetAutoScale(key, scale, showPanel = False)
 IncreaseOctaveShift(num, showPanel = False)
 {
     SetOctaveShift(octaveShift + num, showPanel)
-}
+    If (showPanel){
+        str := octaveShift
+        ShowMessagePanel(str, "Octave Shift")
+    }}
 
 SetOctaveShift(octv, showPanel = False)
 {
     octaveShift := octv
     UpdateSettingWindow()
     If (showPanel){
-        str := MIDI_NOTES[key] . " " . MIDI_SCALES_S[scale]
+        str := octaveShift
         ShowMessagePanel(str, "Octave Shift")
     }
 }
