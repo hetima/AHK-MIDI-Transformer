@@ -55,52 +55,60 @@ AutoHotkey-Midi のインスタンスがグローバル変数 `midi` に格納�
 
 
 ・ `AMTMidiNoteOn:` ラベル  
-すべてのノートオンを受け取るラベルです。 `midi.MidiIn()` で現在のMIDIイベントを取得し `intercepted` プロパティを `True` にすることによりパススルーされなくなり発音されなくなります。
+・ `AMTMidiNoteOnCtrl:` ラベル  
+すべてのノートオンを受け取るラベルです。 `midi.MidiIn()` で現在のMIDIイベントを取得し `intercepted` プロパティを `True` にすることによりパススルーされなくなり発音されなくなります。  
+同時に Ctrl キーを押しているときは `AMTMidiNoteOnCtrl:` ラベルが実行されます。
 
 ```ahk
 AMTMidiNoteOn:
-    ;Ctrlを押しながら鍵盤を弾くとなにかする
-    If (GetKeyState("Ctrl"))
+    ; midi.MidiIn() で現在のMIDIイベントを取得できる
+    event := midi.MidiIn()
+    ; ベロシティ
+    velocity := event.velocity
+    ; ノートネーム C など
+    note := event.note
+    ; オクターブ
+    octave := event.octave
+    ; ノートネーム+オクターブ C3 など
+    noteName := event.noteName
+    ; ノートナンバー
+    noteNumber := event.noteNumber
+
+    If (GetKeyState("Shift"))
     {
         ; intercepted を True にすることによってパススルーされなくなる
-        event := midi.MidiIn()
         event.intercepted := True
-        ; ベロシティ
-        velocity := event.velocity
-        ; ノートネーム C など
-        note := event.note
-        ; オクターブ
-        octave := event.octave
-        ; ノートネーム+オクターブ C3 など
-        noteName := event.noteName
-        ; ノートナンバー
-        noteNumber := event.noteNumber
     }
 Return
 ```
 
 ・ `AMTMidiNoteOff:` ラベル  
-すべてのノートオフを受け取るラベルです。`intercepted` の仕様は `AMTMidiNoteOn:` と同等です。
+すべてのノートオフを受け取るラベルです。`intercepted` の仕様は `AMTMidiNoteOn:` と同等です。  
+ノートオフには `Ctrl` が付いたラベルはありません。
 
 ・ `AMTMidiNoteOnノート名:` ラベル  
 ・ `AMTMidiNoteOffノート名:` ラベル  
+・ `AMTMidiNoteOnノート名Ctrl:` ラベル  
 ノートオン/オフをノートごとに受け取るラベルです。C3などの文字もしくは生の値です。数値の確認はセッティングウィンドウを前面に出して鍵盤を押すと表示されます。このラベルが実行されると発音はされません。個別ラベル実行時に `intercepted` は `True` になっています。ノートごとのラベルが存在する場合、そのノートでは  `AMTMidiNoteOn/Off:` は実行されませんが、個別ラベルの中で `intercepted` を `False` にすると `AMTMidiNoteOn/Off:` も実行され、そのまま変更がなければパススルーもされます。  
+ノートオンでは同時に Ctrl キーを押しているときは末尾に `Ctrl` が付いたラベルが実行されます。
+
 
 ```ahk
 AMTMidiNoteOnC1:
-    ; 上記の AMTMidiNoteOn: に対応させたい場合、Ctrl が押されていたら intercepted := False とする
-    If (GetKeyState("Ctrl"))
+    If (GetKeyState("Shift"))
     {
-        midi.MidiIn().intercepted := False
         Return
     }
-    ; main code
+    ; 上記の AMTMidiNoteOn: も呼びたい場合、 intercepted := False とする
+    midi.MidiIn().intercepted := False
 Return
 ```
 
 
 ・ `AMTMidiControlChange:` ラベル  
-すべてのCCを受け取るラベルです。`intercepted` の仕様は `AMTMidiNoteOn:` と同等です。
+・ `AMTMidiControlChangeCtrl:` ラベル  
+すべてのCCを受け取るラベルです。`intercepted` の仕様は `AMTMidiNoteOn:` と同等です。  
+同時に Ctrl キーを押しているときは末尾に `Ctrl` が付いたラベルが実行されます。
 
 ```ahk
 AMTMidiControlChange:
@@ -114,7 +122,9 @@ Return
 ```
 
 ・ `AMTMidiControlChange数字:` ラベル  
+・ `AMTMidiControlChange数字Ctrl:` ラベル  
 CCを個別に受け取るラベルです。個別のラベルが存在する場合、そのCCでは  `AMTMidiControlChange:` は実行されませんが、個別ラベルの中で `intercepted` を `False` にすると `AMTMidiControlChange:` も実行され、そのまま変更がなければパススルーもされます。  
+同時に Ctrl キーを押しているときは末尾に `Ctrl` が付いたラベルが実行されます。
 
 ・ `SendAllNoteOff()`  
 オールノートオフをアウトプットデバイスに送信する関数です。
@@ -123,23 +133,24 @@ CCを個別に受け取るラベルです。個別のラベルが存在する場
 Auto Scaleの設定を変更する関数です。`Key` はC=1～B=12、`scale` は Major=1 Minor=2 H-Minor=3 M-Minor=4 の数字を指定します。`showPanel` を `True` にしておくとパネルを表示します。
 
 ```ahk
-AMTMidiNoteOn:
-    ;Ctrlを押しながら鍵盤を弾くとAutoScale設定を変更する例
-    If (GetKeyState("Ctrl"))
+;Ctrlを押しながら鍵盤を弾くとAutoScale設定を変更する例
+AMTMidiNoteOnCtrl:
+    event := midi.MidiIn()
+    event.intercepted := True
+    scale := 1
+    ;Shiftも押すとマイナー
+    If (GetKeyState("Shift"))
     {
-        event := midi.MidiIn()
-        event.intercepted := True
-        scale := 1
-        ;Shiftも押すとマイナー
-        If (GetKeyState("Shift"))
-        {
-            scale := 2
-        }
-        key := Mod( event.noteNumber, MIDI_NOTE_SIZE )
-        SetAutoScale(key + 1, scale, True)
+        scale := 2
     }
+    key := Mod( event.noteNumber, MIDI_NOTE_SIZE )
+    SetAutoScale(key + 1, scale, True)
 Return
 ```
 
 ・ ShowMessagePanel(txt, title = "Message")  
 引数 `txt` を大きな文字で表示するウィンドウを表示します。1秒経過するかescを押すとウィンドウは閉じます。
+
+・ SetOctaveShift(octv, showPanel = False)  
+・ IncreaseOctaveShift(num, showPanel = False)  
+オクターブシフトの値を設定します。`showPanel` を `True` にしておくとパネルを表示します。 `IncreaseOctaveShift` に負の値を渡すとオクターブを下げることができます。
