@@ -372,8 +372,10 @@ MidiOutChord(noteNumber, vel, isNoteOn = True)
     ; 度数
     if(VOICING_CHORDS[chordVoicing].length()>=7){
         chord := VOICING_CHORDS[chordVoicing][diff2+1]
+        oneChord := False
     }else{
         chord := VOICING_CHORDS[chordVoicing][1]
+        oneChord := True
     }
     ;chord := [1,5,8]
     For i, chordNote In chord
@@ -399,7 +401,10 @@ MidiOutChord(noteNumber, vel, isNoteOn = True)
         If (ErrorLevel == 0){
             tone -= 1
         }
-        chordNote += diff2 -1
+        if(oneChord){
+            chordNote += diff2
+        }
+        chordNote -= 1
         val1 := Mod(chordNote, 7)+1
         diff3 := Floor(chordNote/7)*12
         shft := keys[val1]
@@ -409,6 +414,7 @@ MidiOutChord(noteNumber, vel, isNoteOn = True)
         dwMidi := MidiStatus + ((note) << 8) + (newVel << 16)
         midi.MidiOutRawData(dwMidi)
     }
+
 }
 
 ;;;;;;;;;; setting ;;;;;;;;;;
@@ -691,7 +697,7 @@ LoadSetting()
     chordVoicing :=LoadSettingValue("chordVoicing", chordVoicing)
 
     If (VOICING_CHORDS.length() < chordVoicing){
-        chordVoicing := 1
+        ;chordVoicing := 1
     }
 }
 
