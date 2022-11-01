@@ -53,6 +53,8 @@ AHK-MIDI-Transformer.ahk を読み込んで更に機能を追加したスクリ�
 ・ `midi`  
 AutoHotkey-Midi のインスタンスがグローバル変数 `midi` に格納されています。
 
+・ AMTFinishLaunching:` ラベル  
+AHK-MIDI-Transformer の初期化が完了したタイミングで呼び出されるラベルです。
 
 ・ `AMTMidiNoteOn:` ラベル  
 ・ `AMTMidiNoteOnCtrl:` ラベル  
