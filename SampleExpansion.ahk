@@ -18,15 +18,8 @@ Global settingFilePath := A_ScriptDir . "\SampleExpansion.ini"
 Return
 
 ; Ctrl + 鍵盤で Setting ウィンドウ表示
-AMTMidiNoteOn42:
-    event := midi.MidiIn()
-    If (GetKeyState("Ctrl"))
-    {
-        showSetting()
-    }else{
-        ; 音を鳴らす
-        event.intercepted := False
-    }
+AMTMidiNoteOn42Ctrl:
+    showSetting()
 Return
 
 ;端の黒鍵を押下してる間オクターブを上げ下げ
@@ -48,62 +41,40 @@ AMTMidiNoteOff42:
 Return
 
 ; Ctrl + 鍵盤でオクターブシフト
-AMTMidiNoteOn41:
-    If (GetKeyState("Ctrl"))
-    {
-        ; シフトも押すとリセット
-        If (GetKeyState("Shift")){
-            octaveShift := 0
-        }else{
-            octaveShift -= 1
-        }
-        ShowMessagePanel(octaveShift, "octaveShift")
+AMTMidiNoteOn41Ctrl:
+    ; シフトも押すとリセット
+    If (GetKeyState("Shift")){
+        octaveShift := 0
     }else{
-        ; 音を鳴らす
-        midi.MidiIn().intercepted := False
+        octaveShift -= 1
     }
+    ShowMessagePanel(octaveShift, "octaveShift")
 Return
-AMTMidiNoteOn43:
-    If (GetKeyState("Ctrl"))
-    {
-        ; シフトも押すとリセット
-        If (GetKeyState("Shift")){
-            octaveShift := 0
-        }else{
-            octaveShift += 1
-        }
-        ShowMessagePanel(octaveShift, "octaveShift")
+AMTMidiNoteOn43Ctrl:
+    ; シフトも押すとリセット
+    If (GetKeyState("Shift")){
+        octaveShift := 0
     }else{
-        ; 音を鳴らす
-        midi.MidiIn().intercepted := False
+        octaveShift += 1
     }
+    ShowMessagePanel(octaveShift, "octaveShift")
 Return
 
 ; Ctrl + 鍵盤で Chord In Black Key のオンオフ切り替え
-AMTMidiNoteOn44:
-    event := midi.MidiIn()
-    If (GetKeyState("Ctrl"))
-    {
-        SetChordInBlackKeyEnabled(blackKeyChordEnabled ? 0:1, True)
-    }else{
-        ; 音を鳴らす
-        event.intercepted := False
-    }
+AMTMidiNoteOn44Ctrl:
+    SetChordInBlackKeyEnabled(blackKeyChordEnabled ? 0:1, True)
 Return
 
-AMTMidiNoteOn:
-    ;Ctrlを押しながら鍵盤を弾くとAutoScale設定を変更する
-    If (GetKeyState("Ctrl"))
+;Ctrlを押しながら鍵盤を弾くとAutoScale設定を変更する
+AMTMidiNoteOnCtrl:
+    event := midi.MidiIn()
+    event.intercepted := True
+    scale := 1
+    ;Shiftも押すとマイナー
+    If (GetKeyState("Shift"))
     {
-        event := midi.MidiIn()
-        event.intercepted := True
-        scale := 1
-        ;Shiftも押すとマイナー
-        If (GetKeyState("Shift"))
-        {
-            scale := 2
-        }
-        key := Mod( event.noteNumber, MIDI_NOTE_SIZE )
-        setAutoScale(key + 1, scale, True)
+        scale := 2
     }
+    key := Mod( event.noteNumber, MIDI_NOTE_SIZE )
+    setAutoScale(key + 1, scale, True)
 Return

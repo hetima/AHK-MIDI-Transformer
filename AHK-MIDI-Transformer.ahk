@@ -116,17 +116,21 @@ SendResetAllController(ch = 1)
 MidiControlChange:
     event := midi.MidiIn()
     event.intercepted := False
-    altLabel := "AMTMidiControlChange" . event.controller
+    allCCLAbel := "AMTMidiControlChange"
+    altLabel := allCCLAbel . event.controller
+    If (GetKeyState("Ctrl"))
+    {
+        allCCLAbel := allCCLAbel . "Ctrl"
+        altLabel := altLabel . "Ctrl"
+    }
     If IsLabel( altLabel )
     {
         event.intercepted := True
         Gosub %altLabel%
     }
-    If(!event.intercepted && IsLabel( "AMTMidiControlChange" ))
+    If(!event.intercepted && IsLabel( allCCLAbel ))
     {
-        ;ラベルが存在しないと直接指定できないので変数に入れる
-        altLabel := "AMTMidiControlChange"
-        Gosub %altLabel%
+        Gosub %allCCLAbel%
     }
     If (!event.intercepted){
         cc := event.controller
@@ -191,23 +195,28 @@ TransformMidiNoteNumber(originalNoteNumber)
 MidiNoteOn:
     event := midi.MidiIn()
     event.intercepted := False
-    altLabel := "AMTMidiNoteOn" . event.noteNumber
+    noteOnLabel := "AMTMidiNoteOn"
+    altLabel := noteOnLabel . event.noteNumber
+    noteNameLabel := noteOnLabel . event.noteName
+    If (GetKeyState("Ctrl"))
+    {
+        noteOnLabel := noteOnLabel . "Ctrl"
+        altLabel := altLabel . "Ctrl"
+        noteNameLabel := noteNameLabel . "Ctrl"
+    }
     If IsLabel( altLabel )
     {
         event.intercepted := True
         Gosub %altLabel%
     }
-    else If IsLabel( "AMTMidiNoteOn" . event.noteName )
+    else If IsLabel( noteNameLabel )
     {
-        altLabel := "AMTMidiNoteOn" . event.noteName
         event.intercepted := True
-        Gosub %altLabel%
+        Gosub %noteNameLabel%
     }
-    If (!event.intercepted && IsLabel( "AMTMidiNoteOn" ))
+    If (!event.intercepted && IsLabel( noteOnLabel ))
     {
-        ;ラベルが存在しないと直接指定できないので変数に入れる
-        altLabel := "AMTMidiNoteOn"
-        Gosub %altLabel%
+        Gosub %noteOnLabel%
     }
     If (!event.intercepted){
         TryBlackKeyChord(event, True)
