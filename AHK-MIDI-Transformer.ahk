@@ -47,8 +47,9 @@ Global blackKeyChordEnabled := 0
 Global blackKeyChordRootKey := 3
 ; そのC#を弾くと鳴る音の高さ
 Global blackKeyChordRootPitch := 3 
+; コード弾きのボイシング
+Global chordVoicing := 1
 ; iniに書き込まれる設定おわり
-
 
 ; オートスケール
 Global autoScaleKey := 1 ;1==C ~ 12==B
@@ -56,19 +57,6 @@ Global autoScale := 1 ;1==Major 2==Minor 3==H-Minor 4==M-Minor
 Global octaveShift := 0
 ; 一時的にオフにするとき用
 Global autoScaleOff := False
-
-
-; このファイルと同じ階層にある Midi.ahk を読み込む
-#include %A_LineFile%\..\Midi.ahk
-Global midi := new Midi()
-OnExit, ExitSub
-midi.LoadIOSetting(settingFilePath)
-LoadSetting()
-InitSettingGui()
-InitSettingMessageGui()
-Menu, Tray, Add
-Menu, Tray, Add, Setting
-midiEventPassThrough := True
 
 ;Global MIDI_NOTES     := [ "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" ]
 Global MIDI_SCALES     := ["Major", "Minor", "H-Minor", "M-Minor"]
@@ -86,12 +74,35 @@ Global H_MINOR_SHIFT   := [ 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0 ]
 Global M_MINOR_SHIFT   := [ 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0 ]
 Global SCALE_SHIFTS    := [MAJOR_SHIFT, MINOR_SHIFT, H_MINOR_SHIFT, M_MINOR_SHIFT]
 
+Global VOICING_TRIAD   := [[1,3,5]]
+Global VOICING_1INV    := [[1+7,3,5]]
+Global VOICING_2INV    := [[1+7,3+7,5]]
+Global VOICING_CHORDS  := [VOICING_TRIAD, VOICING_1INV, VOICING_2INV]
+Global VOICING_NAMES   := ["triad", "1st inv", "2nd inv"]
+
+; このファイルと同じ階層にある Midi.ahk を読み込む
+#include %A_LineFile%\..\Midi.ahk
+Global midi := new Midi()
+OnExit, ExitSub
+midi.LoadIOSetting(settingFilePath)
+LoadSetting()
+InitSettingGui()
+InitSettingMessageGui()
+Menu, Tray, Add
+Menu, Tray, Add, Setting
+midiEventPassThrough := True
+
 Process, Exist,
 global __pid := ErrorLevel
 ; 必須初期化おわり
 
 If (FileExist(A_LineFile . "\..\icon.ico")){
     Menu, Tray, Icon, %A_LineFile% \..\icon.ico
+}
+
+finishLaunching := "AMTFinishLaunching"
+If (IsLabel(finishLaunching)){
+    Gosub, %finishLaunching%
 }
 
 ; 初期化おわり
@@ -359,7 +370,11 @@ MidiOutChord(noteNumber, vel, isNoteOn = True)
     noteNumber := noteNumber - diff
     noteNumber := TransformMidiNoteNumber(noteNumber)
     ; 度数
-    chord := [1,3,5]
+    if(VOICING_CHORDS[chordVoicing].length()>=7){
+        chord := VOICING_CHORDS[chordVoicing][diff2+1]
+    }else{
+        chord := VOICING_CHORDS[chordVoicing][1]
+    }
     ;chord := [1,5,8]
     For i, chordNote In chord
     {
@@ -485,6 +500,25 @@ SetChordInBlackKeyRootPitch(rootPitch)
     updateSettingWindow()
 }
 
+AddVoicing(name, voicing)
+{
+    VOICING_NAMES.Push(name)
+    VOICING_CHORDS.Push(voicing)
+    voicingsList := ""
+    For Key, Value in VOICING_NAMES
+    {
+        voicingsList .= "|" . Value 
+    }
+    GuiControl, 7:, SVoicong, %voicingsList%
+
+}
+
+SetVoicing(num)
+{
+    chordVoicing := num
+    updateSettingWindow()
+}
+
 ; 設定ウィンドウ
 
 global SFVSlidr
@@ -496,7 +530,13 @@ global SOctv
 global SBKCEnabled
 global SBKCRoot
 global SBKCPitch
+global SVoicong
 InitSettingGui(){
+    voicingsList := ""
+    For Key, Value in VOICING_NAMES
+    {
+        voicingsList .= Value . "|"
+    }
     Gui 7: -MinimizeBox -MaximizeBox
     Gui 7: Font, s12, Segoe UI
     Gui 7: Add, Text, x0 y16 w110 h30 +0x200 Right, Fixed Velocity:
@@ -513,9 +553,12 @@ InitSettingGui(){
     Gui 7: Add, Text, x176 y110 w68 h30 +0x200 +Right, Root C#:
     Gui 7: Add, DropDownList, vSBKCRoot gBKCChanged x248 y110 w50, 0|1|2|3|4|5
     Gui 7: Add, Text, x312 y110 w50 h30 +0x200 +Right, Pitch:
-    Gui 7: Add, DropDownList, vSBKCPitch gBKCChanged x371 y110 w50, 0|1|2|3|4|5
+    Gui 7: Add, DropDownList, vSBKCPitch gBKCChanged x370 y110 w50, 0|1|2|3|4|5
 
-    Gui 7: Add, Text,vSLogTxt x16 y150 w380 h26 +0x200,
+    Gui 7: Add, Text, x200 y144 w106 h30 +0x200 +Right, Chord Voicong:
+    Gui 7: Add, DropDownList, vSVoicong gVoicongChanged AltSubmit x320 y144 w110, %voicingsList%
+
+    Gui 7: Add, Text,vSLogTxt x16 y190 w380 h26 +0x200,
     Gui 7: Font
 }
 
@@ -534,7 +577,7 @@ Return
 ShowSetting()
 {
     updateSettingWindow()
-    Gui 7: Show, w440 h180, AHK-MIDI-Transformer Setting
+    Gui 7: Show, w440 h220, AHK-MIDI-Transformer Setting
     Return
 }
 
@@ -548,6 +591,8 @@ UpdateSettingWindow()
     GuiControl, 7:, SBKCEnabled, %blackKeyChordEnabled%
     GuiControl, 7:ChooseString, SBKCRoot, %blackKeyChordRootKey%
     GuiControl, 7:ChooseString, SBKCPitch, %blackKeyChordRootPitch%
+    GuiControl, 7:Choose, SVoicong, %chordVoicing%
+
 }
 
 SScaleKeyChanged:
@@ -578,7 +623,11 @@ BKCChanged:
     SendAllNoteOff()
 Return
 
-
+VoicongChanged:
+    GuiControlGet, outputVar, 7:, SVoicong
+    chordVoicing := outputVar
+    SendAllNoteOff()
+Return
 ; 設定ウィンドウのスライダーが動いたら
 SlidrChanged:
     GuiControlGet, outputVar, 7:, SFVSlidr
@@ -639,7 +688,11 @@ LoadSetting()
     blackKeyChordEnabled :=LoadSettingValue("blackKeyChordEnabled", blackKeyChordEnabled)
     blackKeyChordRootKey :=LoadSettingValue("blackKeyChordRootKey", blackKeyChordRootKey)
     blackKeyChordRootPitch :=LoadSettingValue("blackKeyChordRootPitch", blackKeyChordRootPitch)
+    chordVoicing :=LoadSettingValue("chordVoicing", chordVoicing)
 
+    If (VOICING_CHORDS.length() < chordVoicing){
+        chordVoicing := 1
+    }
 }
 
 SaveSettingValue(name, val)
@@ -656,6 +709,7 @@ SaveSetting()
     SaveSettingValue("blackKeyChordEnabled", blackKeyChordEnabled)
     SaveSettingValue("blackKeyChordRootKey", blackKeyChordRootKey)
     SaveSettingValue("blackKeyChordRootPitch", blackKeyChordRootPitch)
+    SaveSettingValue("chordVoicing", chordVoicing)
     ; IniWrite, %fixedVelocity%, %settingFilePath%, mySettings, fixedVelocity
 }
 
