@@ -148,9 +148,13 @@ AMTMidiNoteOnCtrl:
 Return
 ```
 
-・ ShowMessagePanel(txt, title = "Message")  
+・ `ShowMessagePanel(txt, title = "Message")`  
 引数 `txt` を大きな文字で表示するウィンドウを表示します。1秒経過するかescを押すとウィンドウは閉じます。
 
-・ SetOctaveShift(octv, showPanel = False)  
-・ IncreaseOctaveShift(num, showPanel = False)  
-オクターブシフトの値を設定します。`showPanel` を `True` にしておくとパネルを表示します。 `IncreaseOctaveShift` に負の値を渡すとオクターブを下げることができます。
+・ `SetOctaveShift(octv, showPanel = False)`  
+・ `IncreaseOctaveShift(num, showPanel = False)`  
+オクターブシフトの値を設定します。`IncreaseOctaveShift` に負の値を渡すとオクターブを下げることができます。`showPanel` を `True` にしておくとパネルを表示します。
+
+・ `SetChordInBlackKeyEnabled(isEnabled, showPanel = False)`  
+Chord In Black Key のオンオフを設定します。第一引数に True/False もしくは 1/0 を渡します。トグルしたい場合は `SetChordInBlackKeyEnabled( !blackKeyChordEnabled )` としてください。`showPanel` を `True` にしておくとパネルを表示します。
+
