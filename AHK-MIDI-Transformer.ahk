@@ -416,6 +416,14 @@ IncreaseOctaveShift(num, showPanel = False)
 
 SetOctaveShift(octv, showPanel = False)
 {
+    If (octv < -4)
+    {
+        octv := -4
+    }
+    else If (octv > 4)
+    {
+        octv := 4
+    }
     octaveShift := octv
     UpdateSettingWindow()
     If (showPanel){
