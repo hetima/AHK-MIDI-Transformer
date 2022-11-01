@@ -78,7 +78,7 @@ Global MAJOR_KEYS      := [ 0, 2, 4, 5, 7, 9, 11 ] ;CDEFGAB
 Global MINOR_KEYS      := [ 0, 2, 3, 5, 7, 8, 10 ]
 Global H_MINOR_KEYS    := [ 0, 2, 3, 5, 7, 8, 11 ]
 Global M_MINOR_KEYS    := [ 0, 2, 3, 5, 7, 9, 11 ]
-Global _KEYS           := [MAJOR_KEYS, MINOR_KEYS, H_MINOR_KEYS, M_MINOR_KEYS]
+Global SCALE_KEYS      := [MAJOR_KEYS, MINOR_KEYS, H_MINOR_KEYS, M_MINOR_KEYS]
 
 Global MAJOR_SHIFT     := [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
 Global MINOR_SHIFT     := [ 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, -1 ]
@@ -344,7 +344,7 @@ MidiOutChord(noteNumber, vel, isNoteOn = True)
         MidiStatus :=  127 + 1
     }
 
-    keys := _KEYS[autoScale]
+    keys := SCALE_KEYS[autoScale]
     ; Cにする
     diff := Mod(noteNumber, 12)
     diff2 := 0
