@@ -169,21 +169,9 @@ TransformMidiNoteNumber(originalNoteNumber)
     noteNumber := octaveShift * MIDI_NOTE_SIZE + originalNoteNumber
     If (!autoScaleOff)
     {
-        If (autoScale == 2)
-        {
-            noteScaleNumber := Mod( noteNumber, MIDI_NOTE_SIZE )
-            noteNumber := noteNumber + MINOR_SHIFT[noteScaleNumber + 1]
-        }
-        else If (autoScale == 3)
-        {
-            noteScaleNumber := Mod( noteNumber, MIDI_NOTE_SIZE )
-            noteNumber := noteNumber + H_MINOR_SHIFT[noteScaleNumber + 1]
-        }
-        else If (autoScale == 4)
-        {
-            noteScaleNumber := Mod( noteNumber, MIDI_NOTE_SIZE )
-            noteNumber := noteNumber + M_MINOR_SHIFT[noteScaleNumber + 1]
-        }
+        noteScaleNumber := Mod( noteNumber, MIDI_NOTE_SIZE )
+        noteNumber := noteNumber + SCALE_SHIFTS[autoScale][noteScaleNumber + 1]
+
         If (autoScaleKey != 1)
         {
             keyShift := autoScaleKey - 1
