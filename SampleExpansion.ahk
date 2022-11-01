@@ -44,20 +44,18 @@ Return
 AMTMidiNoteOn41Ctrl:
     ; シフトも押すとリセット
     If (GetKeyState("Shift")){
-        octaveShift := 0
+        SetOctaveShift(0, True)
     }else{
-        octaveShift -= 1
+        IncreaseOctaveShift(-1, True)
     }
-    ShowMessagePanel(octaveShift, "octaveShift")
 Return
 AMTMidiNoteOn43Ctrl:
     ; シフトも押すとリセット
     If (GetKeyState("Shift")){
-        octaveShift := 0
+        SetOctaveShift(0, True)
     }else{
-        octaveShift += 1
+        IncreaseOctaveShift(1, True)
     }
-    ShowMessagePanel(octaveShift, "octaveShift")
 Return
 
 ; Ctrl + 鍵盤で Chord In Black Key のオンオフ切り替え
