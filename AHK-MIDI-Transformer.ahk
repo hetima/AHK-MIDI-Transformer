@@ -51,6 +51,9 @@ Global blackKeyChordRootPitch := 3
 Global chordVoicing := 1
 ; iniに書き込まれる設定おわり
 
+; Chord In White Key
+Global whiteKeyChordEnabled := 0
+
 ; オートスケール
 Global autoScaleKey := 1 ;1==C ~ 12==B
 Global autoScale := 1 ;1==Major 2==Minor 3==H-Minor 4==M-Minor
@@ -224,8 +227,13 @@ MidiNoteOn:
     {
         Gosub %noteOnLabel%
     }
-    If (!event.intercepted){
+    If (!event.intercepted)
+    {
         TryBlackKeyChord(event, True)
+    }
+    If (!event.intercepted)
+    {
+        TryWhiteKeyChord(event, True)
     }
     If (!event.intercepted)
     {
@@ -273,8 +281,13 @@ MidiNoteOff:
         event.intercepted := True
         Gosub %altLabel%
     }
-    If (!event.intercepted){
+    If (!event.intercepted)
+    {
         TryBlackKeyChord(event, False)
+    }
+    If (!event.intercepted)
+    {
+        TryWhiteKeyChord(event, False)
     }
     If (!event.intercepted && IsLabel( "AMTMidiNoteOff" ))
     {
@@ -289,10 +302,21 @@ MidiNoteOff:
     }
 Return
 
-; 黒鍵でコードを弾く
+; 白鍵でコードを弾く Chord In White Key
+TryWhiteKeyChord(event, isNoteOn)
+{
+    If (whiteKeyChordEnabled)
+    {
+        MidiOutChord(event.noteNumber, event.velocity, isNoteOn)
+        event.intercepted := True
+    }
+}
+
+; 黒鍵でコードを弾く Chord In Black Key
+; Chord In White Key が有効な場合も発動
 TryBlackKeyChord(event, isNoteOn)
 {
-    If (!blackKeyChordEnabled)
+    If (!blackKeyChordEnabled && !whiteKeyChordEnabled)
     {
         Return
     }
@@ -484,6 +508,7 @@ SetChordInBlackKey(isEnabled, rootKey, rootPitch)
     blackKeyChordRootKey := rootKey
     blackKeyChordRootPitch := rootPitch
     updateSettingWindow()
+    SendAllNoteOff()
 }
 
 SetChordInBlackKeyEnabled(isEnabled, showPanel = False)
@@ -494,16 +519,29 @@ SetChordInBlackKeyEnabled(isEnabled, showPanel = False)
         str := "CBK:" . (blackKeyChordEnabled ? "ON":"OFF")
         ShowMessagePanel(str, "ChordInBlackKey")
     }
+    SendAllNoteOff()
 }
 SetChordInBlackKeyRootKey(rootKey)
 {
     blackKeyChordRootKey := rootKey
     updateSettingWindow()
+    SendAllNoteOff()
 }
 SetChordInBlackKeyRootPitch(rootPitch)
 {
     blackKeyChordRootPitch := rootPitch
     updateSettingWindow()
+    SendAllNoteOff()
+}
+SetChordInWhiteKeyEnabled(isEnabled, showPanel = False)
+{
+    whiteKeyChordEnabled := (isEnabled ? 1:0)
+    updateSettingWindow()
+    If (showPanel){
+        str := "CWK:" . (whiteKeyChordEnabled ? "ON":"OFF")
+        ShowMessagePanel(str, "ChordInWhiteKey")
+    }
+    SendAllNoteOff()
 }
 
 AddVoicing(name, voicing)
@@ -534,6 +572,7 @@ global SScale
 global SLogTxt
 global SOctv
 global SBKCEnabled
+global SWKCEnabled
 global SBKCRoot
 global SBKCPitch
 global SVoicong
@@ -555,14 +594,16 @@ InitSettingGui(){
     Gui 7: Add, Text, x302 y64 w64 h30 +0x200 +Right, Octave:
     Gui 7: Add, DropDownList, vSOctv gOctvChanged x374 y64 w50, -4|-3|-2|-1|0|1|2|3|4
 
-    Gui 7: Add, CheckBox, vSBKCEnabled gBKCChanged x16 y110 w156 h30, Chord in Black Key
-    Gui 7: Add, Text, x176 y110 w68 h30 +0x200 +Right, Root C#:
-    Gui 7: Add, DropDownList, vSBKCRoot gBKCChanged x248 y110 w50, 0|1|2|3|4|5
-    Gui 7: Add, Text, x312 y110 w50 h30 +0x200 +Right, Pitch:
-    Gui 7: Add, DropDownList, vSBKCPitch gBKCChanged x370 y110 w50, 0|1|2|3|4|5
+    Gui 7: Add, CheckBox, vSBKCEnabled gBKCChanged x16 y142 w156 h30, Chord in Black Key
+    Gui 7: Add, Text, x176 y142 w68 h30 +0x200 +Right, Root C#:
+    Gui 7: Add, DropDownList, vSBKCRoot gBKCChanged x248 y142 w50, 0|1|2|3|4|5
+    Gui 7: Add, Text, x312 y142 w50 h30 +0x200 +Right, Pitch:
+    Gui 7: Add, DropDownList, vSBKCPitch gBKCChanged x370 y142 w50, 0|1|2|3|4|5
 
-    Gui 7: Add, Text, x200 y144 w106 h30 +0x200 +Right, Chord Voicong:
-    Gui 7: Add, DropDownList, vSVoicong gVoicongChanged AltSubmit x320 y144 w110, %voicingsList%
+    Gui 7: Add, CheckBox, vSWKCEnabled gWKCChanged x16 y104 w160 h34, Chord in White Key
+    Gui 7: Add, Text, x230 y104 w76 h30 +0x200 +Right, Voicong:
+    Gui 7: Add, DropDownList, vSVoicong gVoicongChanged AltSubmit x320 y104 w110, %voicingsList%
+
 
     Gui 7: Add, Text,vSLogTxt x16 y190 w380 h26 +0x200,
     Gui 7: Font
@@ -598,6 +639,7 @@ UpdateSettingWindow()
     GuiControl, 7:ChooseString, SBKCRoot, %blackKeyChordRootKey%
     GuiControl, 7:ChooseString, SBKCPitch, %blackKeyChordRootPitch%
     GuiControl, 7:Choose, SVoicong, %chordVoicing%
+    GuiControl, 7:, SWKCEnabled, %whiteKeyChordEnabled%
 
 }
 
@@ -626,6 +668,12 @@ BKCChanged:
     blackKeyChordRootKey := outputVar
     GuiControlGet, outputVar, 7:, SBKCPitch
     blackKeyChordRootPitch := outputVar
+    SendAllNoteOff()
+Return
+
+WKCChanged:
+    GuiControlGet, outputVar, 7:, SWKCEnabled
+    whiteKeyChordEnabled := outputVar
     SendAllNoteOff()
 Return
 
