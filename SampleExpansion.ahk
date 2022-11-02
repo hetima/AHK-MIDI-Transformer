@@ -58,9 +58,12 @@ AMTMidiNoteOn43Ctrl:
     }
 Return
 
-; Ctrl + 鍵盤で Chord In Black Key のオンオフ切り替え
+; Ctrl + キーでコード弾きオンオフ切り替え
 AMTMidiNoteOn44Ctrl:
-    SetChordInBlackKeyEnabled(blackKeyChordEnabled ? 0:1, True)
+    SetChordInBlackKeyEnabled(!blackKeyChordEnabled, True)
+Return
+AMTMidiNoteOn45Ctrl:
+    SetChordInWhiteKeyEnabled(!whiteKeyChordEnabled, True)
 Return
 
 ;Ctrlを押しながら鍵盤を弾くとAutoScale設定を変更する

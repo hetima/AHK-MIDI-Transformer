@@ -25,6 +25,8 @@ C Majorにしておくと何も変更されない通常通りの動作となり�
 ## Chord In Black Key
 黒鍵1キーでコードを弾ける機能です。C# から1オクターブ上の D# まで Auto Scale のスケールに合ったコードを弾くことができます。それよりも高い/低い黒鍵も順番にコードが鳴ります。Settingウィンドウで機能自体のオンオフと、どのC#からどの高さの音を鳴らすかを設定できます。
 
+## Chord In White Key
+白鍵1キーでコードを弾ける機能です。これがオンになっている間は Chord In Black Key もオンになります。
 
 ## ファイル構成
 
@@ -159,4 +161,7 @@ Return
 
 ・ `SetChordInBlackKeyEnabled(isEnabled, showPanel = False)`  
 Chord In Black Key のオンオフを設定します。第一引数に True/False もしくは 1/0 を渡します。トグルしたい場合は `SetChordInBlackKeyEnabled( !blackKeyChordEnabled )` としてください。`showPanel` を `True` にしておくとパネルを表示します。
+
+・ `SetChordInWhiteKeyEnabled(isEnabled, showPanel = False)`  
+Chord In White Key のオンオフを設定します。第一引数に True/False もしくは 1/0 を渡します。トグルしたい場合は `SetChordInWhiteKeyEnabled(!whiteKeyChordEnabled)` としてください。`showPanel` を `True` にしておくとパネルを表示します。
 
