@@ -553,7 +553,7 @@ AddVoicing(name, voicing)
     {
         voicingsList .= "|" . Value 
     }
-    GuiControl, 7:, SVoicong, %voicingsList%
+    GuiControl, 7:, SVoicing, %voicingsList%
 
 }
 
@@ -575,7 +575,7 @@ global SBKCEnabled
 global SWKCEnabled
 global SBKCRoot
 global SBKCPitch
-global SVoicong
+global SVoicing
 InitSettingGui(){
     voicingsList := ""
     For Key, Value in VOICING_NAMES
@@ -601,8 +601,8 @@ InitSettingGui(){
     Gui 7: Add, DropDownList, vSBKCPitch gBKCChanged x370 y142 w50, 0|1|2|3|4|5
 
     Gui 7: Add, CheckBox, vSWKCEnabled gWKCChanged x16 y104 w160 h34, Chord in White Key
-    Gui 7: Add, Text, x230 y104 w76 h30 +0x200 +Right, Voicong:
-    Gui 7: Add, DropDownList, vSVoicong gVoicongChanged AltSubmit x320 y104 w110, %voicingsList%
+    Gui 7: Add, Text, x230 y104 w76 h30 +0x200 +Right, Voicing:
+    Gui 7: Add, DropDownList, vSVoicing gVoicingChanged AltSubmit x320 y104 w110, %voicingsList%
 
 
     Gui 7: Add, Text,vSLogTxt x16 y190 w380 h26 +0x200,
@@ -638,7 +638,7 @@ UpdateSettingWindow()
     GuiControl, 7:, SBKCEnabled, %blackKeyChordEnabled%
     GuiControl, 7:ChooseString, SBKCRoot, %blackKeyChordRootKey%
     GuiControl, 7:ChooseString, SBKCPitch, %blackKeyChordRootPitch%
-    GuiControl, 7:Choose, SVoicong, %chordVoicing%
+    GuiControl, 7:Choose, SVoicing, %chordVoicing%
     GuiControl, 7:, SWKCEnabled, %whiteKeyChordEnabled%
 
 }
@@ -677,8 +677,8 @@ WKCChanged:
     SendAllNoteOff()
 Return
 
-VoicongChanged:
-    GuiControlGet, outputVar, 7:, SVoicong
+VoicingChanged:
+    GuiControlGet, outputVar, 7:, SVoicing
     chordVoicing := outputVar
     SendAllNoteOff()
 Return
