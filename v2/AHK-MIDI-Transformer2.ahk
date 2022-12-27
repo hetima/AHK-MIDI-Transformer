@@ -135,6 +135,9 @@ SendResetAllController(ch := 1)
 
 Class AHKMT
 {
+    delegate := False
+    specificProcessCallback := False
+
     __New()
     {
         AHKMT.InitSettingGui()
@@ -145,24 +148,48 @@ Class AHKMT
     MidiControlChange(event)
     {
         ;event := midi.MidiIn()
-        event.intercepted := False
+        event.eventHandled := False
         allCCLAbel := "AMTMidiControlChange"
         altLabel := allCCLAbel . event.controller
+
+        If ( this.specificProcessCallback ){
+            processPrefix := __GetProcessLabel()
+        }else{
+            processPrefix := False
+        }
         If (GetKeyState("Ctrl"))
         {
             allCCLAbel := allCCLAbel . "Ctrl"
             altLabel := altLabel . "Ctrl"
         }
-        If IsLabel( altLabel )
+        If ( processPrefix ){
+            processLabel := processPrefix . altLabel
+            If ( HasMethod(this.delegate, processLabel, 1) )
+            {
+                midiEvent.eventHandled := True
+                this.delegate.%processLabel%(event)
+            }
+            processLabel := processPrefix . allCCLAbel
+            If (!event.eventHandled && HasMethod(this.delegate, processLabel, 1) )
+            {
+                midiEvent.eventHandled := True
+                this.delegate.%processLabel%(event)
+            } 
+        }
+
+        If (!event.eventHandled && HasMethod(this.delegate, altLabel, 1))
         {
-            event.intercepted := True
+            event.eventHandled := True
+            this.delegate.%altLabel%(event)
             ;Gosub %altLabel%
         }
-        If(!event.intercepted && IsLabel( allCCLAbel ))
+        If (!event.eventHandled && HasMethod(this.delegate, allCCLAbel, 1))
         {
+            this.delegate.%allCCLAbel%(event)
             ;Gosub %allCCLAbel%
         }
-        If (!event.intercepted){
+
+        If (!event.eventHandled){
             cc := event.controller
             If (cc == fixedVelocityCC)
             {
@@ -171,10 +198,11 @@ Class AHKMT
                 midi.MidiOutRawData(event.rawBytes)
             }
         }
+
         ;設定ウィンドウがアクティブなら情報表示
         if(WinGetPID("A") == __pid)
         {
-            If (!event.intercepted)
+            If (!event.eventHandled)
             {
                 logTxt := "CC:" event.controller . " (" . event.value . ")"
             }
@@ -184,6 +212,7 @@ Class AHKMT
             }
             AHKMT.SLogTxt.Text := logTxt
         }
+        event.eventHandled := True
     }
 
     
@@ -191,40 +220,73 @@ Class AHKMT
     MidiNoteOn(event)
     {
         ;event := midi.MidiIn()
-        event.intercepted := False
+        event.eventHandled := False
         noteOnLabel := "AMTMidiNoteOn"
         altLabel := noteOnLabel . event.noteNumber
         noteNameLabel := noteOnLabel . event.noteName
         newNum := 0
+        If ( this.specificProcessCallback ){
+            processPrefix := __GetProcessLabel()
+        }else{
+            processPrefix := False
+        }
         If (GetKeyState("Ctrl"))
         {
             noteOnLabel := noteOnLabel . "Ctrl"
             altLabel := altLabel . "Ctrl"
             noteNameLabel := noteNameLabel . "Ctrl"
         }
-        If IsLabel( altLabel )
+
+        If ( processPrefix ){
+            processLabel := processPrefix . altLabel
+            If ( HasMethod(this.delegate, processLabel, 1) )
+            {
+                midiEvent.eventHandled := True
+                this.delegate.%processLabel%(event)
+            }
+            processLabel := processPrefix . noteNameLabel
+            If (!event.eventHandled &&  HasMethod(this.delegate, processLabel, 1) )
+            {
+                midiEvent.eventHandled := True
+                this.delegate.%processLabel%(event)
+            }
+            processLabel := processPrefix . noteOnLabel
+            If (!event.eventHandled &&  HasMethod(this.delegate, processLabel, 1) )
+            {
+                midiEvent.eventHandled := True
+                this.delegate.%processLabel%(event)
+            }
+        }
+
+        If (!event.eventHandled && HasMethod(this.delegate, altLabel, 1))
         {
-            event.intercepted := True
+            event.eventHandled := True
+            this.delegate.%altLabel%(event)
             ;Gosub %altLabel%
         }
-        else If IsLabel( noteNameLabel )
+        If (!event.eventHandled && HasMethod(this.delegate, noteNameLabel, 1))
         {
-            event.intercepted := True
+            event.eventHandled := True
+            this.delegate.%noteNameLabel%(event)
             ;Gosub %noteNameLabel%
         }
-        If (!event.intercepted && IsLabel( noteOnLabel ))
+
+
+        If (!event.eventHandled && HasMethod(this.delegate, noteOnLabel, 1))
         {
+            ;event.eventHandled := True
+            this.delegate.%noteOnLabel%(event)
             ;Gosub %noteOnLabel%
         }
-        If (!event.intercepted)
-        {
-            TryBlackKeyChord(event, True)
-        }
-        If (!event.intercepted)
+        ; If (!event.eventHandled)
+        ; {
+        ;     TryBlackKeyChord(event, True)
+        ; }
+        If (!event.eventHandled)
         {
             TryWhiteKeyChord(event, True)
         }
-        If (!event.intercepted)
+        If (!event.eventHandled)
         {
             ; MsgBox %event.velocity%
             If (fixedVelocity > 0 && fixedVelocity < 128)
@@ -240,7 +302,7 @@ Class AHKMT
         ;設定ウィンドウがアクティブなら情報表示
         if(WinGetPID("A") == __pid)
         {
-            If (!event.intercepted)
+            If (!event.eventHandled)
             {
                 ; Determine the octave of the note in the scale 
                 ;noteOctaveNumber := Floor( midiEvent.noteNumber / MIDI_NOTE_SIZE )
@@ -254,43 +316,83 @@ Class AHKMT
             }
             AHKMT.SLogTxt.Text := logTxt
         }
+        event.eventHandled := True
     }
 
     MidiNoteOff(event)
     {
         ;event := midi.MidiIn()
-        event.intercepted := False
-        altLabel := "AMTMidiNoteOff" . event.noteNumber
-        If IsLabel( altLabel )
+        event.eventHandled := False
+        noteOffLabel := "AMTMidiNoteOff"
+        altLabel := noteOffLabel . event.noteNumber
+        noteNameLabel := noteOffLabel . event.noteName
+        If ( this.specificProcessCallback ){
+            processPrefix := __GetProcessLabel()
+        }else{
+            processPrefix := False
+        }
+
+        If ( processPrefix ){
+            processLabel := processPrefix . altLabel
+            If ( HasMethod(this.delegate, processLabel, 1) )
+            {
+                midiEvent.eventHandled := True
+                this.delegate.%processLabel%(event)
+            }
+            processLabel := processPrefix . noteNameLabel
+            If (!event.eventHandled &&  HasMethod(this.delegate, processLabel, 1) )
+            {
+                midiEvent.eventHandled := True
+                this.delegate.%processLabel%(event)
+            }
+            processLabel := processPrefix . noteOffLabel
+            If (!event.eventHandled &&  HasMethod(this.delegate, processLabel, 1) )
+            {
+                midiEvent.eventHandled := True
+                this.delegate.%processLabel%(event)
+            }
+        }
+
+        If (!event.eventHandled && HasMethod(this.delegate, altLabel, 1))
         {
-            event.intercepted := True
+            event.eventHandled := True
+            this.delegate.%altLabel%(event)
             ;Gosub %altLabel%
         }
-        else If IsLabel( "AMTMidiNoteOff" . event.noteName )
+        If (!event.eventHandled && HasMethod(this.delegate, noteNameLabel, 1))
         {
-            altLabel := "AMTMidiNoteOff" . event.noteName
-            event.intercepted := True
-            ;Gosub %altLabel%
+            event.eventHandled := True
+            this.delegate.%noteNameLabel%(event)
+            ;Gosub %noteNameLabel%
         }
-        If (!event.intercepted)
+
+        If (!event.eventHandled && HasMethod(this.delegate, noteOffLabel, 1))
         {
-            TryBlackKeyChord(event, False)
+            ;event.eventHandled := True
+            this.delegate.%noteOnLabel%(event)
+            ;Gosub %noteOnLabel%
         }
-        If (!event.intercepted)
+
+        ; If (!event.eventHandled)
+        ; {
+        ;     TryBlackKeyChord(event, False)
+        ; }
+        If (!event.eventHandled)
         {
             TryWhiteKeyChord(event, False)
         }
-        If (!event.intercepted && IsLabel( "AMTMidiNoteOff" ))
-        {
-            ;ラベルが存在しないと直接指定できないので変数に入れる
-            altLabel := "AMTMidiNoteOff"
-            ;Gosub %altLabel%
-        }
-        If (!event.intercepted)
+        ; If (!event.eventHandled && HasMethod(this.delegate, noteOffLabel , 1))
+        ; {
+        ;     ;event.eventHandled := True
+        ;     this.delegate.%noteOffLabel%(event)
+        ;     ;Gosub %altLabel%
+        ; }
+        If (!event.eventHandled)
         {
             noteNumber := TransformMidiNoteNumber(event.noteNumber)
             Midi.MidiOut("N0", 1, noteNumber, event.velocity)
         }
+        event.eventHandled := True
     }
 
     static settingGui := False
@@ -409,7 +511,7 @@ TryWhiteKeyChord(event, isNoteOn)
     If (whiteKeyChordEnabled)
     {
         MidiOutChord(event.noteNumber, event.velocity, isNoteOn)
-        event.intercepted := True
+        event.eventHandled := True
     }
 }
 
@@ -459,7 +561,7 @@ TryBlackKeyChord(event, isNoteOn)
     }
     
     MidiOutChord(key + rootPitch, event.velocity, isNoteOn)
-    event.intercepted := True
+    event.eventHandled := True
     ; if(isNoteOn){
     ;     ShowMessagePanel(num . ":" . key, "test")
     ; }
