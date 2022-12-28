@@ -25,7 +25,7 @@ SendMode Input  ; Recommended for new scripts due to its superior speed and reli
 
 ; 設定ファイルのパス
 Global settingFilePath
-if(!settingFilePath){
+if (!IsSet(settingFilePath)) {
     settingFilePath := A_ScriptDir . "\AHK-MIDI-Transformer.ini"
 }
 ; 以下の設定はiniファイルに保存されるのでここを編集しても反映されません
