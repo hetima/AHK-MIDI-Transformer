@@ -193,7 +193,7 @@ Class AHKMT
             cc := event.controller
             If (cc == fixedVelocityCC)
             {
-                SetFixedVelocityFromCC()
+                SetFixedVelocityFromCC(event)
             }else{
                 midi.MidiOutRawData(event.rawBytes)
             }
@@ -650,17 +650,17 @@ MidiOutChord(noteNumber, vel, isNoteOn := True)
 ;;;;;;;;;; setting ;;;;;;;;;;
 
 ; fixedVelocityを変更するCCが来たらパネルを表示
-SetFixedVelocityFromCC()
+SetFixedVelocityFromCC(event)
 {
     global fixedVelocity
     If (CCMode==0){
-        fixedVelocity := midi.MidiIn().value
+        fixedVelocity := event.value
     }else{
         step := 1
         If (fixedVelocity <= 100 && fixedVelocityCCStep > 0 && fixedVelocityCCStep < 20){
             step := fixedVelocityCCStep
         }
-        fixedVelocity := fixedVelocity + (midi.MidiIn().value - 64)*step
+        fixedVelocity := fixedVelocity + (event.value - 64)*step
     }
     If (fixedVelocity > 127){
         fixedVelocity := 127
