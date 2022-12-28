@@ -200,7 +200,7 @@ Class AHKMT
         }
 
         ;設定ウィンドウがアクティブなら情報表示
-        if(WinGetPID("A") == __pid)
+        if(AHKMT.IsSettingWindowVisible())
         {
             If (!event.eventHandled)
             {
@@ -300,7 +300,7 @@ Class AHKMT
         }
 
         ;設定ウィンドウがアクティブなら情報表示
-        if(WinGetPID("A") == __pid)
+        if( AHKMT.IsSettingWindowVisible() )
         {
             If (!event.eventHandled)
             {
@@ -476,6 +476,15 @@ Class AHKMT
         ;Gui 9:Font, s60
         AHKMT.MsgTxt :=AHKMT.messagePanelGui.Add("Text", "x0 y16 w360 h62 +0x200 Center", fixedVelocity)
         ;Gui 9:Font
+    }
+
+    static IsSettingWindowVisible()
+    {
+        styl := WinGetStyle(AHKMT.settingGui.Hwnd)
+        if (styl & 0x10000000){
+            return true
+        }
+        return false
     }
 
 }
