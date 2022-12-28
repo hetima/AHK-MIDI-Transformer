@@ -439,17 +439,16 @@ Class AHKMT
         AHKMT.SOctv :=AHKMT.settingGui.Add("DropDownList", "x374 y64 w50", ["-4","-3","-2","-1","0","1","2","3","4"])
         AHKMT.SOctv.OnEvent("Change", OctvChanged)
 
-        AHKMT.SBKCEnabled :=AHKMT.settingGui.Add("CheckBox", "x16 y142 w156 h30", "Chord in Black Key")
-        AHKMT.SBKCEnabled.OnEvent("Click", BKCChanged)
+        ; AHKMT.SBKCEnabled :=AHKMT.settingGui.Add("CheckBox", "x16 y142 w156 h30", "Chord in Black Key")
+        ; AHKMT.SBKCEnabled.OnEvent("Click", BKCChanged)
 
-        AHKMT.settingGui.Add("Text", "x176 y142 w68 h30 +0x200 +Right", "Root C#:")
-        AHKMT.SBKCRoot :=AHKMT.settingGui.Add("DropDownList", "x248 y142 w50", ["0","1","2","3","4","5"])
-        AHKMT.SBKCRoot.OnEvent("Change", BKCChanged)
+        ; AHKMT.settingGui.Add("Text", "x176 y142 w68 h30 +0x200 +Right", "Root C#:")
+        ; AHKMT.SBKCRoot :=AHKMT.settingGui.Add("DropDownList", "x248 y142 w50", ["0","1","2","3","4","5"])
+        ; AHKMT.SBKCRoot.OnEvent("Change", BKCChanged)
 
-        AHKMT.settingGui.Add("Text", "x312 y142 w50 h30 +0x200 +Right", "Pitch:")
-
-        AHKMT.SBKCPitch :=AHKMT.settingGui.Add("DropDownList", "x370 y142 w50", ["0","1","2","3","4","5"])
-        AHKMT.SBKCPitch.OnEvent("Change", BKCChanged)
+        ; AHKMT.settingGui.Add("Text", "x312 y142 w50 h30 +0x200 +Right", "Pitch:")
+        ; AHKMT.SBKCPitch :=AHKMT.settingGui.Add("DropDownList", "x370 y142 w50", ["0","1","2","3","4","5"])
+        ; AHKMT.SBKCPitch.OnEvent("Change", BKCChanged)
 
         AHKMT.SWKCEnabled :=AHKMT.settingGui.Add("CheckBox", "x16 y104 w160 h34", "Chord in White Key")
         AHKMT.SWKCEnabled.OnEvent("Click", WKCChanged)
@@ -516,10 +515,9 @@ TryWhiteKeyChord(event, isNoteOn)
 }
 
 ; 黒鍵でコードを弾く Chord In Black Key
-; Chord In White Key が有効な場合も発動
 TryBlackKeyChord(event, isNoteOn)
 {
-    If (!blackKeyChordEnabled and !whiteKeyChordEnabled)
+    If (!blackKeyChordEnabled)
     {
         Return
     }
@@ -809,9 +807,9 @@ UpdateSettingWindow()
     AHKMT.SScaleKey.Choose(autoScaleKey) ;GuiControl, 7:Choose, SScaleKey, %autoScaleKey%
     AHKMT.SScale.Choose(autoScale) ;GuiControl, 7:Choose, SScale, %autoScale%
     AHKMT.SOctv.Choose(String(octaveShift)) ;GuiControl, 7:ChooseString, SOctv, %octaveShift%
-    AHKMT.SBKCEnabled.Value := blackKeyChordEnabled ;GuiControl, 7:, SBKCEnabled, %blackKeyChordEnabled%
-    AHKMT.SBKCRoot.Choose(String(blackKeyChordRootKey)) ;GuiControl, 7:ChooseString, SBKCRoot, %blackKeyChordRootKey%
-    AHKMT.SBKCPitch.Choose(String(blackKeyChordRootPitch)) ;GuiControl, 7:ChooseString, SBKCPitch, %blackKeyChordRootPitch%
+    ; AHKMT.SBKCEnabled.Value := blackKeyChordEnabled ;GuiControl, 7:, SBKCEnabled, %blackKeyChordEnabled%
+    ; AHKMT.SBKCRoot.Choose(String(blackKeyChordRootKey)) ;GuiControl, 7:ChooseString, SBKCRoot, %blackKeyChordRootKey%
+    ; AHKMT.SBKCPitch.Choose(String(blackKeyChordRootPitch)) ;GuiControl, 7:ChooseString, SBKCPitch, %blackKeyChordRootPitch%
     AHKMT.SVoicing.Choose(chordVoicing) ;GuiControl, 7:Choose, SVoicing, %chordVoicing%
     AHKMT.SWKCEnabled.Value := whiteKeyChordEnabled ;GuiControl, 7:, SWKCEnabled, %whiteKeyChordEnabled%
 
@@ -839,18 +837,18 @@ OctvChanged(GuiCtrlObj, Info){
     SendAllNoteOff()
 }
 
-BKCChanged(GuiCtrlObj, Info){
-    global blackKeyChordEnabled
-    global blackKeyChordRootKey
-    global blackKeyChordRootPitch
-    ;GuiControlGet, outputVar, 7:, SBKCEnabled
-    blackKeyChordEnabled := AHKMT.SBKCEnabled.Value
-    ;GuiControlGet, outputVar, 7:, SBKCRoot
-    blackKeyChordRootKey :=  AHKMT.SBKCRoot.Text
-    ;GuiControlGet, outputVar, 7:, SBKCPitch
-    blackKeyChordRootPitch :=  AHKMT.SBKCPitch.Text
-    SendAllNoteOff()
-}
+; BKCChanged(GuiCtrlObj, Info){
+;     global blackKeyChordEnabled
+;     global blackKeyChordRootKey
+;     global blackKeyChordRootPitch
+;     ;GuiControlGet, outputVar, 7:, SBKCEnabled
+;     blackKeyChordEnabled := AHKMT.SBKCEnabled.Value
+;     ;GuiControlGet, outputVar, 7:, SBKCRoot
+;     blackKeyChordRootKey :=  AHKMT.SBKCRoot.Text
+;     ;GuiControlGet, outputVar, 7:, SBKCPitch
+;     blackKeyChordRootPitch :=  AHKMT.SBKCPitch.Text
+;     SendAllNoteOff()
+; }
 
 WKCChanged(GuiCtrlObj, Info){
     global whiteKeyChordEnabled
