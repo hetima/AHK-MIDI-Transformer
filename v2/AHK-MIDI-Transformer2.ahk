@@ -166,13 +166,13 @@ Class AHKMT
             processLabel := processPrefix . altLabel
             If ( HasMethod(this.delegate, processLabel, 1) )
             {
-                midiEvent.eventHandled := True
+                event.eventHandled := True
                 this.delegate.%processLabel%(event)
             }
             processLabel := processPrefix . allCCLAbel
             If (!event.eventHandled && HasMethod(this.delegate, processLabel, 1) )
             {
-                midiEvent.eventHandled := True
+                event.eventHandled := True
                 this.delegate.%processLabel%(event)
             } 
         }
@@ -241,19 +241,19 @@ Class AHKMT
             processLabel := processPrefix . altLabel
             If ( HasMethod(this.delegate, processLabel, 1) )
             {
-                midiEvent.eventHandled := True
+                event.eventHandled := True
                 this.delegate.%processLabel%(event)
             }
             processLabel := processPrefix . noteNameLabel
             If (!event.eventHandled &&  HasMethod(this.delegate, processLabel, 1) )
             {
-                midiEvent.eventHandled := True
+                event.eventHandled := True
                 this.delegate.%processLabel%(event)
             }
             processLabel := processPrefix . noteOnLabel
             If (!event.eventHandled &&  HasMethod(this.delegate, processLabel, 1) )
             {
-                midiEvent.eventHandled := True
+                event.eventHandled := True
                 this.delegate.%processLabel%(event)
             }
         }
@@ -305,7 +305,7 @@ Class AHKMT
             If (!event.eventHandled)
             {
                 ; Determine the octave of the note in the scale 
-                ;noteOctaveNumber := Floor( midiEvent.noteNumber / MIDI_NOTE_SIZE )
+                ;noteOctaveNumber := Floor( event.noteNumber / MIDI_NOTE_SIZE )
                 ; Create a friendly name for the note and octave, ie: "C4"
                 newNoteName := MIDI_NOTES[ Mod( newNum, MIDI_NOTE_SIZE ) + 1 ] . AHKMidi.MIDI_OCTAVES[ Floor( newNum / MIDI_NOTE_SIZE ) + 1 ]
                 logTxt := event.noteNumber . " (" . event.noteName . ") vel:" . event.velocity . " -> " . newNum . " (" . newNoteName . ") vel:" . newVel
@@ -336,19 +336,19 @@ Class AHKMT
             processLabel := processPrefix . altLabel
             If ( HasMethod(this.delegate, processLabel, 1) )
             {
-                midiEvent.eventHandled := True
+                event.eventHandled := True
                 this.delegate.%processLabel%(event)
             }
             processLabel := processPrefix . noteNameLabel
             If (!event.eventHandled &&  HasMethod(this.delegate, processLabel, 1) )
             {
-                midiEvent.eventHandled := True
+                event.eventHandled := True
                 this.delegate.%processLabel%(event)
             }
             processLabel := processPrefix . noteOffLabel
             If (!event.eventHandled &&  HasMethod(this.delegate, processLabel, 1) )
             {
-                midiEvent.eventHandled := True
+                event.eventHandled := True
                 this.delegate.%processLabel%(event)
             }
         }
