@@ -23,8 +23,8 @@
 ;SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 
 ; 設定ファイルのパス
-Global settingFilePath := false
-if(!settingFilePath){
+Global settingFilePath
+if(!IsSet(settingFilePath)){
     settingFilePath := A_ScriptDir . "\AHK-MIDI-Transformer2.ini"
 }
 ; 以下の設定はiniファイルに保存されるのでここを編集しても反映されません
@@ -369,8 +369,8 @@ Class AHKMT
         If (!event.eventHandled && HasMethod(this.delegate, noteOffLabel, 1))
         {
             ;event.eventHandled := True
-            this.delegate.%noteOnLabel%(event)
-            ;Gosub %noteOnLabel%
+            this.delegate.%noteOffLabel%(event)
+            ;Gosub %noteOffLabel%
         }
 
         ; If (!event.eventHandled)
@@ -793,7 +793,7 @@ GuiEscape(GuiObj){
 
 
 ; 設定ウィンドウを表示
-ShowSetting(ItemName, ItemPos, MyMenu)
+ShowSetting(ItemName := False, ItemPos := False, MyMenu := False)
 {
     updateSettingWindow()
     ;Gui 7: Show, w440 h220, AHK-MIDI-Transformer Setting
