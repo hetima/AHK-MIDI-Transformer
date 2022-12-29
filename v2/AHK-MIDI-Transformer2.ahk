@@ -100,8 +100,8 @@ midi.delegate := midiTransformer
 global __pid := ProcessExist()
 ; 必須初期化おわり
 
-If (FileExist(A_LineFile . "\..\..\icon.ico")){
-    TraySetIcon(A_LineFile . "\..\..\icon.ico")
+If (FileExist(A_LineFile . "\..\icon.ico")){
+    TraySetIcon(A_LineFile . "\..\icon.ico")
 }
 
 finishLaunching := "AMTFinishLaunching"
