@@ -141,6 +141,9 @@ Class AHKMT
     {
         AHKMT.InitSettingGui()
         AHKMT.InitSettingMessageGui()
+        this.ccFunc := SetFixedVelocityFromCC
+        this.ccCtrlFunc := SetOctaveShiftFromCC
+        this.ccShiftFunc := SetAutoScaleFromCC
     }
 
     ; CC
@@ -192,8 +195,14 @@ Class AHKMT
             cc := event.controller
             If (cc == fixedVelocityCC)
             {
-                SetFixedVelocityFromCC(event)
-            }else{
+                If (GetKeyState("Ctrl")){
+                    this.ccCtrlFunc.Call(event)
+                } else If (GetKeyState("Shift")){
+                    this.ccShiftFunc.Call(event)
+                } else {
+                    this.ccFunc.Call(event)
+                }
+            } else {
                 midi.MidiOutRawData(event.rawBytes)
             }
         }
@@ -678,6 +687,96 @@ SetFixedVelocityFromCC(event)
     updateSettingWindow()
 }
 
+; CCでAutoScaleを順番に変更する
+; CCMode := 1 のときのみ
+global __setAutoScaleFromCCCnt := 0
+SetAutoScaleFromCC(event)
+{
+    global __setAutoScaleFromCCCnt
+    If (CCMode == 0) {
+        return
+    } else {
+        key := autoScaleKey
+        If (event.value > 64) {
+            if (__setAutoScaleFromCCCnt < 0) {
+                __setAutoScaleFromCCCnt := 0
+            } else {
+                __setAutoScaleFromCCCnt++
+            }
+            if(__setAutoScaleFromCCCnt < 5 ){
+                return
+            }
+            __setAutoScaleFromCCCnt := 0
+            if (autoScale = 1){
+                SetAutoScale(key, 2, true)
+                return
+            }
+            key++
+            if (key > 12) {
+                key := 1
+            }
+            SetAutoScale(key, 1, true)
+
+        }else{
+            if (__setAutoScaleFromCCCnt > 0) {
+                __setAutoScaleFromCCCnt := 0
+            }else{
+                __setAutoScaleFromCCCnt--
+            }
+            if (__setAutoScaleFromCCCnt > -5) {
+                return
+            }
+            __setAutoScaleFromCCCnt := 0
+            if (autoScale != 1) {
+                SetAutoScale(key, 1, true)
+                return
+            }
+            key--
+            if(key < 1){
+                key := 12
+            }
+            SetAutoScale(key, 2, true)
+        }
+    }
+}
+
+; CCでOctaveShiftを変更する
+; CCMode := 1 のときのみ
+global __setOctaveShiftFromCCCnt := 0
+SetOctaveShiftFromCC(event)
+{
+    global __setOctaveShiftFromCCCnt
+    If (CCMode == 0) {
+        return
+    } else {
+        key := autoScaleKey
+        If (event.value > 64) {
+            if (__setOctaveShiftFromCCCnt < 0) {
+                __setOctaveShiftFromCCCnt := 0
+            } else {
+                __setOctaveShiftFromCCCnt++
+            }
+            if (__setOctaveShiftFromCCCnt < 5) {
+                return
+            }
+            __setOctaveShiftFromCCCnt := 0
+            IncreaseOctaveShift(1, true)
+        } else {
+            if (__setOctaveShiftFromCCCnt > 0) {
+                __setOctaveShiftFromCCCnt := 0
+            } else {
+                __setOctaveShiftFromCCCnt--
+            }
+            if (__setOctaveShiftFromCCCnt > -5) {
+                return
+            }
+            __setOctaveShiftFromCCCnt := 0
+            IncreaseOctaveShift(-1, true)
+        }
+    }
+}
+
+
 SetAutoScale(key, scale, showPanel := False)
 {
     global autoScaleKey
@@ -694,10 +793,7 @@ SetAutoScale(key, scale, showPanel := False)
 IncreaseOctaveShift(num, showPanel := False)
 {
     SetOctaveShift(octaveShift + num, showPanel)
-    If (showPanel){
-        str := octaveShift
-        ShowMessagePanel(str, "Octave Shift")
-    }}
+}
 
 SetOctaveShift(octv, showPanel := False)
 {
