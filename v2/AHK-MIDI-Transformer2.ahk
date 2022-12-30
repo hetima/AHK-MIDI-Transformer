@@ -139,8 +139,8 @@ Class AHKMT
 
     __New()
     {
-        AHKMT.InitSettingGui()
-        AHKMT.InitSettingMessageGui()
+        this.InitSettingGui()
+        this.InitMessageGui()
         this.ccFunc := SetFixedVelocityFromCC
         this.ccCtrlFunc := SetOctaveShiftFromCC
         this.ccShiftFunc := SetAutoScaleFromCC
@@ -208,7 +208,7 @@ Class AHKMT
         }
 
         ;設定ウィンドウがアクティブなら情報表示
-        if(AHKMT.IsSettingWindowVisible())
+        if(this.IsSettingWindowVisible())
         {
             If (!event.eventHandled)
             {
@@ -308,7 +308,7 @@ Class AHKMT
         }
 
         ;設定ウィンドウがアクティブなら情報表示
-        if( AHKMT.IsSettingWindowVisible() )
+        if( this.IsSettingWindowVisible() )
         {
             If (!event.eventHandled)
             {
@@ -416,7 +416,8 @@ Class AHKMT
     static SBKCPitch := False
     static SVoicing := False
 
-    static InitSettingGui(){
+    InitSettingGui()
+    {
         AHKMT.settingGui := Gui("", "AHK-MIDI-Transformer Setting")
         AHKMT.settingGui.OnEvent("Escape", GuiEscape)
         
@@ -469,11 +470,11 @@ Class AHKMT
         AHKMT.SLogTxt :=AHKMT.settingGui.Add("Text", "vSLogTxt x16 y190 w380 h26 +0x200", "")
         ;Gui 7: Font
     }
-    static messagePanelGui := false
 
+    static messagePanelGui := false
     static MsgTxt := false
 
-    static InitSettingMessageGui()
+    InitMessageGui()
     {
         AHKMT.messagePanelGui := Gui("", "message")
         AHKMT.messagePanelGui.OnEvent("Escape", GuiEscape)
@@ -486,7 +487,7 @@ Class AHKMT
         ;Gui 9:Font
     }
 
-    static IsSettingWindowVisible()
+    IsSettingWindowVisible()
     {
         styl := WinGetStyle(AHKMT.settingGui.Hwnd)
         if (styl & 0x10000000){
