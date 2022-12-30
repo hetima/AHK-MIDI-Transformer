@@ -86,10 +86,9 @@ Global VOICING_NAMES   := ["triad", "1st inv", "2nd inv"]
 ; このファイルと同じ階層にある Midi2.ahk を読み込む
 #include %A_LineFile%\..\Midi2.ahk
 Global midi := AHKMidi()
+midi.settingFilePath := settingFilePath
 Global midiTransformer := AHKMT()
 OnExit ExitFunc
-
-midi.LoadIOSetting(settingFilePath)
 LoadSetting()
 A_TrayMenu.Add()
 A_TrayMenu.Add("Setting", ShowSetting)
@@ -971,5 +970,4 @@ SaveSetting()
 
 ExitFunc(ExitReason, ExitCode){
     SaveSetting()
-    midi.SaveIOSetting(settingFilePath)
 }
