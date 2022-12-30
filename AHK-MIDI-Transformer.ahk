@@ -479,10 +479,7 @@ SetAutoScale(key, scale, showPanel = False)
 IncreaseOctaveShift(num, showPanel = False)
 {
     SetOctaveShift(octaveShift + num, showPanel)
-    If (showPanel){
-        str := octaveShift
-        ShowMessagePanel(str, "Octave Shift")
-    }}
+}
 
 SetOctaveShift(octv, showPanel = False)
 {
