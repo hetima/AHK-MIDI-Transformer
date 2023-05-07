@@ -181,7 +181,7 @@ Return
 TransformMidiNoteNumber(originalNoteNumber)
 {
     noteNumber := octaveShift * MIDI_NOTE_SIZE + originalNoteNumber
-    If (!autoScaleOff)
+    If (!autoScaleOff && noteNumber >= 0 && noteNumber <= 127)
     {
         noteScaleNumber := Mod( noteNumber, MIDI_NOTE_SIZE )
         noteNumber := noteNumber + SCALE_SHIFTS[autoScale][noteScaleNumber + 1]

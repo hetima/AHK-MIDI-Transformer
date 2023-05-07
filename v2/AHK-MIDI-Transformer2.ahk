@@ -504,7 +504,7 @@ Class AHKMT
 TransformMidiNoteNumber(originalNoteNumber)
 {
     noteNumber := AHKMT.octaveShift * AHKMT.MIDI_NOTE_SIZE + originalNoteNumber
-    If (!AHKMT.autoScaleOff)
+    If (!AHKMT.autoScaleOff && noteNumber >= 0 && noteNumber <= 127)
     {
         noteScaleNumber := Mod( noteNumber, AHKMT.MIDI_NOTE_SIZE )
         noteNumber := noteNumber + AHKMT.SCALE_SHIFTS[AHKMT.autoScale][noteScaleNumber + 1]
