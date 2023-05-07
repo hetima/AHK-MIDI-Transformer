@@ -691,7 +691,7 @@ SetFixedVelocityFromCC(event)
 ; CCでAutoScaleを順番に変更する
 ; AHKMT.CCMode := 1 のときのみ
 global __setAutoScaleFromCCCnt := 0
-SetAutoScaleFromCC(event)
+SetAutoScaleFromCC(event, showPanel := true)
 {
     global __setAutoScaleFromCCCnt
     If (AHKMT.CCMode == 0) {
@@ -709,14 +709,14 @@ SetAutoScaleFromCC(event)
             }
             __setAutoScaleFromCCCnt := 0
             if (AHKMT.autoScale = 1){
-                SetAutoScale(key, 2, true)
+                SetAutoScale(key, 2, showPanel)
                 return
             }
             key++
             if (key > 12) {
                 key := 1
             }
-            SetAutoScale(key, 1, true)
+            SetAutoScale(key, 1, showPanel)
 
         }else{
             if (__setAutoScaleFromCCCnt > 0) {
@@ -729,14 +729,14 @@ SetAutoScaleFromCC(event)
             }
             __setAutoScaleFromCCCnt := 0
             if (AHKMT.autoScale != 1) {
-                SetAutoScale(key, 1, true)
+                SetAutoScale(key, 1, showPanel)
                 return
             }
             key--
             if(key < 1){
                 key := 12
             }
-            SetAutoScale(key, 2, true)
+            SetAutoScale(key, 2, showPanel)
         }
     }
 }
@@ -744,7 +744,7 @@ SetAutoScaleFromCC(event)
 ; CCでOctaveShiftを変更する
 ; AHKMT.CCMode := 1 のときのみ
 global __setOctaveShiftFromCCCnt := 0
-SetOctaveShiftFromCC(event)
+SetOctaveShiftFromCC(event, showPanel := true)
 {
     global __setOctaveShiftFromCCCnt
     If (AHKMT.CCMode == 0) {
@@ -761,7 +761,7 @@ SetOctaveShiftFromCC(event)
                 return
             }
             __setOctaveShiftFromCCCnt := 0
-            IncreaseOctaveShift(1, true)
+            IncreaseOctaveShift(1, showPanel)
         } else {
             if (__setOctaveShiftFromCCCnt > 0) {
                 __setOctaveShiftFromCCCnt := 0
@@ -772,7 +772,7 @@ SetOctaveShiftFromCC(event)
                 return
             }
             __setOctaveShiftFromCCCnt := 0
-            IncreaseOctaveShift(-1, true)
+            IncreaseOctaveShift(-1, showPanel)
         }
     }
 }
